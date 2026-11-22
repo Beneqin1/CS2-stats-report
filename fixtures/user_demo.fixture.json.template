@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "demo": {
+    "filename": "替换成你的 demo 文件名.dem",
+    "sha256": "替换成 Get-FileHash 得到的 64 位 SHA256",
+    "map": "de_dust2"
+  },
+  "source": "替换成数据来源，例如：游戏内计分板截图 2026-11-22",
+  "notes": "把截图里的数字填到下面；10 名选手都要填。validated_fields 只写截图上确实有的字段；KAST 没有就不要写。",
+  "validated_fields": ["kills", "deaths", "assists", "adr"],
+  "precision": {
+    "adr": 0
+  },
+  "adr_rounding": "floor",
+  "players": [
+    {
+      "name": "Beneqin1",
+      "kills": 0,
+      "deaths": 0,
+      "assists": 0,
+      "adr": 0,
+      "opening_kills": 0
+    }
+  ]
+}

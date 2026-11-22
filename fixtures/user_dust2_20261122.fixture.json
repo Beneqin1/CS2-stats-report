@@ -1,0 +1,26 @@
+{
+  "demo": {
+    "sha256": "d713cf322db67b7a1b2cd55cbef97bde037750d2033c5de1122e6fc040f6c7be",
+    "filename": "auto-20261122-1358-de_dust2-Beneqin1.dem",
+    "map": "de_dust2"
+  },
+  "source": "CS2 in-game scoreboard screenshots 2026-11-22 14:23 (Dust II, 13-6); Kill/Death/Assist/ADR transcribed by user",
+  "notes": "The scoreboard does not show KAST or Open Kills, so those fields are not fixture-gated. ADR is the scoreboard 'damage/round' column and is truncated to an integer.",
+  "precision": {
+    "adr": 0
+  },
+  "adr_rounding": "floor",
+  "validated_fields": ["kills", "deaths", "assists", "adr"],
+  "players": [
+    {"name": "Beneqin1", "kills": 23, "deaths": 15, "assists": 7, "adr": 135},
+    {"name": "gump", "kills": 19, "deaths": 12, "assists": 2, "adr": 98},
+    {"name": "Triton", "kills": 15, "deaths": 13, "assists": 4, "adr": 79},
+    {"name": "Gizmy", "kills": 14, "deaths": 11, "assists": 6, "adr": 77},
+    {"name": "ScopedEconomy", "kills": 7, "deaths": 12, "assists": 1, "adr": 41},
+    {"name": "aragornN", "kills": 14, "deaths": 17, "assists": 5, "adr": 92},
+    {"name": "ListeningOnly", "kills": 13, "deaths": 15, "assists": 5, "adr": 71},
+    {"name": "intra", "kills": 11, "deaths": 18, "assists": 5, "adr": 67},
+    {"name": "StardustSavant", "kills": 9, "deaths": 15, "assists": 9, "adr": 64},
+    {"name": "levi", "kills": 16, "deaths": 15, "assists": 2, "adr": 58}
+  ]
+}

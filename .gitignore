@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Build and release artifacts
+build/
+package/
+dist/
+*.spec
+
+# Local development / probes / downloaded demos
+_vendor/
+screenshots/
+gsi_dumps/
+gsi_dumps2/
+output/
+*.dem
+*.dem.bz2
+
+# Runtime state
+stat.cfg
+stat_cs2stats.cfg
+stats.cfg
+settings.json
+*.log
+
+# Generated docs artifacts
+docs/demo_report.html

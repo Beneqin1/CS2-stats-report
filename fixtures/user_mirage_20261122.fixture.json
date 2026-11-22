@@ -1,0 +1,95 @@
+{
+  "demo": {
+    "sha256": "d536b7b19c8d4dbb32aecdd6eab3c376db40e423fa328f9bbbe995523934fcfe",
+    "filename": "auto-20261122-1713-de_mirage-Beneqin1.dem",
+    "map": "de_mirage"
+  },
+  "source": "2026-11-22 17:30 游戏内计分板截图（Mirage 13-1）",
+  "notes": "截图无 KAST/Open Kills；ADR 为截图伤/局，按向下取整。",
+  "precision": {
+    "adr": 0
+  },
+  "adr_rounding": "floor",
+  "validated_fields": [
+    "kills",
+    "deaths",
+    "assists",
+    "adr"
+  ],
+  "team_scores": {
+    "A": 13,
+    "B": 1
+  },
+  "players": [
+    {
+      "name": "Beneqin1",
+      "kills": 22,
+      "deaths": 7,
+      "assists": 2,
+      "adr": 154
+    },
+    {
+      "name": "Ro1f",
+      "kills": 13,
+      "deaths": 5,
+      "assists": 10,
+      "adr": 109
+    },
+    {
+      "name": "Falk",
+      "kills": 14,
+      "deaths": 7,
+      "assists": 7,
+      "adr": 88
+    },
+    {
+      "name": "blameF",
+      "kills": 10,
+      "deaths": 7,
+      "assists": 5,
+      "adr": 69
+    },
+    {
+      "name": "kuaishe",
+      "kills": 9,
+      "deaths": 6,
+      "assists": 4,
+      "adr": 63
+    },
+    {
+      "name": "ArtFr0st",
+      "kills": 9,
+      "deaths": 14,
+      "assists": 2,
+      "adr": 75
+    },
+    {
+      "name": "ZapR",
+      "kills": 4,
+      "deaths": 14,
+      "assists": 5,
+      "adr": 53
+    },
+    {
+      "name": "relaxxie",
+      "kills": 6,
+      "deaths": 13,
+      "assists": 2,
+      "adr": 47
+    },
+    {
+      "name": "peakz",
+      "kills": 8,
+      "deaths": 14,
+      "assists": 3,
+      "adr": 45
+    },
+    {
+      "name": "Ph1NNN",
+      "kills": 5,
+      "deaths": 13,
+      "assists": 0,
+      "adr": 36
+    }
+  ]
+}

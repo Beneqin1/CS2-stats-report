@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ report.meta.map }} · CS2 Stats Report</title>
+<style>
+  :root {
+    --bg: #12161b;
+    --panel: #202831;
+    --panel-2: #252f3a;
+    --line: rgba(255,255,255,.08);
+    --text: #e6edf3;
+    --muted: #91a2b2;
+    --faint: #657687;
+    --cyan: #98ffff;
+    --yellow: #ffff00;
+    --green: #7ef58a;
+    --red: #ff7b7b;
+    --gold: #ffd24a;
+    --blue: #3b82f6;
+    --track: #39444f;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 500px at 50% -180px, rgba(86, 129, 156, .35), transparent 70%),
+      linear-gradient(180deg, #151b22 0%, #101418 100%);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1800px; margin: 0 auto; padding: 28px 32px 48px; }
+  .hero {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 28px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font-size: 10px; letter-spacing: .22em; color: #8db2c8; font-weight: 700; }
+  h1 { margin: 8px 0 10px; font-size: 46px; line-height: 1.02; font-weight: 800; letter-spacing: -.02em; }
+  h1 .map-sub { color: var(--muted); font-size: 16px; font-weight: 400; letter-spacing: 0; margin-left: 12px; }
+  .meta { color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .meta code { color: #c8d6e3; font-family: Consolas, "Courier New", monospace; font-size: 11px; }
+  .scoreboard { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+  .score-team { min-width: 190px; text-align: center; }
+  .score-team .team-name { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .score-team .team-score { color: var(--team); font-size: 64px; line-height: .95; font-weight: 800; margin: 6px 0 2px; }
+  .score-team .team-sub { color: var(--muted); font-size: 11px; letter-spacing: .03em; }
+  .score-colon { color: #6e8294; font-size: 38px; font-weight: 300; }
+  .mvp-card {
+    min-width: 190px; padding: 12px 16px; border: 1px solid rgba(255,210,74,.62);
+    border-radius: 9px; background: linear-gradient(180deg, rgba(255,210,74,.16), rgba(255,210,74,.05));
+    box-shadow: 0 0 18px rgba(255,210,74,.10);
+  }
+  .mvp-card .badge { display: inline-block; color: #16130b; background: var(--gold); border-radius: 3px; padding: 1px 6px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+  .mvp-card .name { margin-top: 7px; color: #fff4cf; font-size: 17px; font-weight: 750; white-space: nowrap; }
+  .mvp-card .rating { margin-top: 3px; color: var(--gold); font-size: 12px; font-weight: 650; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 16px; }
+  .card {
+    background: linear-gradient(180deg, #26313c, #1c242c);
+    border: 1px solid var(--line); border-radius: 9px; padding: 13px 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.20);
+  }
+  .card-label { color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+  .card-value { margin-top: 5px; color: #fff; font-size: 23px; font-weight: 750; line-height: 1.15; }
+  .card-value.small { font-size: 17px; }
+  .card-sub { color: var(--faint); font-size: 10px; margin-top: 3px; }
+  .banner {
+    display: flex; gap: 12px; align-items: flex-start;
+    border: 1px solid; border-radius: 9px; padding: 12px 15px; margin: 14px 0;
+    font-size: 12px; line-height: 1.6;
+  }
+  .banner strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .banner-ok { background: rgba(46, 160, 84, .14); border-color: rgba(93, 224, 137, .40); color: #c8f5d6; }
+  .banner-warn { background: rgba(196, 120, 31, .14); border-color: rgba(255, 178, 74, .42); color: #f6dcb9; }
+  .banner-live { background: rgba(44, 110, 180, .18); border-color: rgba(108, 178, 255, .45); color: #cfe6ff; }
+  .banner code { color: #fff2d2; font-family: Consolas, monospace; font-size: 11px; }
+  .banner details { margin-top: 6px; }
+  .banner summary { cursor: pointer; color: #ffe6b8; }
+  .controls {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 18px -8px 14px; padding: 10px 8px;
+    background: rgba(16,20,24,.88); border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+  }
+  .controls .control-label { color: var(--muted); font-size: 11px; letter-spacing: .10em; text-transform: uppercase; font-weight: 700; }
+  .controls .hint { color: var(--faint); font-size: 11px; margin-left: auto; }
+  .segmented { display: inline-flex; background: #1a2027; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .segmented button {
+    appearance: none; border: 0; background: transparent; color: var(--muted);
+    padding: 7px 15px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .segmented button:hover { color: #fff; background: rgba(255,255,255,.05); }
+  .segmented button.active { background: #3a4d5f; color: #fff; box-shadow: inset 0 -2px 0 var(--cyan); }
+  .panel {
+    background: linear-gradient(180deg, #232c36, #1b222a);
+    border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px 20px;
+    margin-bottom: 18px; box-shadow: 0 8px 24px rgba(0,0,0,.20);
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 14px; }
+  .panel h2 { margin: 0; color: #f2f7fb; font-size: 18px; font-weight: 750; letter-spacing: -.01em; }
+  .panel-sub { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+  .panel-sub .approx { color: #ffd895; }
+  .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .table-panel { max-width: 1380px; margin-left: auto; margin-right: auto; }
+  .stats-table { width: 100%; min-width: 1180px; border-collapse: separate; border-spacing: 0; }
+  .stats-table th {
+    position: sticky; top: 0; z-index: 2;
+    background: #303b47; color: #c9d7e3;
+    padding: 11px 8px; border-bottom: 1px solid #4b5d6f;
+    font-size: 11px; letter-spacing: .035em; text-transform: uppercase; font-weight: 700;
+    text-align: right; white-space: nowrap;
+  }
+  .stats-table th:first-child { text-align: left; }
+  .ref-tag {
+    display: inline-block; margin-left: 3px; padding: 0 3px;
+    border: 1px solid rgba(255,210,74,.45); border-radius: 3px;
+    color: #ffd24a; font-size: 8px; font-weight: 600; letter-spacing: 0;
+    vertical-align: 1px;
+  }
+  .stats-table td {
+    padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.045);
+    text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;
+    color: #dce6ef; font-size: 14px;
+  }
+  .stats-table td.player { text-align: left; min-width: 230px; }
+  .stats-table tbody tr:nth-child(even) { background: rgba(255,255,255,.014); }
+  .stats-table tbody tr:hover { background: rgba(152,255,255,.055); }
+  .stats-table tbody tr.is-target { background: rgba(255,210,74,.075); }
+  .stats-table tbody tr.is-target:hover { background: rgba(255,210,74,.11); }
+  .team-row td {
+    background: #2a3542 !important; padding: 8px 10px !important;
+    border-top: 1px solid #4b5d6f; border-bottom: 1px solid #4b5d6f; text-align: left;
+  }
+  .team-divider td { height: 12px; padding: 0 !important; border: 0 !important; background: transparent !important; }
+  .team-chip { display: flex; align-items: center; gap: 10px; color: #f4f8fb; font-weight: 750; font-size: 12px; }
+  .team-chip .team-bar { width: 4px; height: 17px; background: var(--team); border-radius: 1px; }
+  .team-chip .team-tag { color: var(--muted); font-weight: 500; font-size: 10px; letter-spacing: .04em; }
+  .team-chip .team-score { margin-left: auto; color: var(--team); font-size: 12px; }
+  .player-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .player-cell .team-bar { width: 3px; height: 15px; background: var(--team); border-radius: 1px; flex: none; }
+  .player-cell .player-name { overflow: hidden; text-overflow: ellipsis; font-weight: 650; color: #eef5fb; }
+  .target-star { color: var(--gold); margin-left: 4px; font-size: 11px; }
+  .num.pos { color: var(--green); }
+  .num.neg { color: var(--red); }
+  .rating-hi { color: var(--green); font-weight: 750; }
+  .rating-lo { color: var(--red); font-weight: 750; }
+  .muted { color: var(--faint); }
+  .small-num { color: var(--muted); font-size: 10px; }
+  .footnote { color: var(--faint); font-size: 10px; line-height: 1.65; margin-top: 10px; }
+  .footnote strong { color: #b9c8d5; font-weight: 600; }
+  .perf-panel { max-width: 1380px; margin-left: auto; margin-right: auto; }
+  .perf-chart { max-width: 1180px; margin: 2px auto 0; }
+  .perf-row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 52px; gap: 10px; align-items: center; margin-bottom: 6px; padding: 3px 6px; border-radius: 5px; border-left: 3px solid transparent; }
+  .perf-row.tier-good { background: linear-gradient(90deg, rgba(55,196,111,.16), rgba(55,196,111,.03) 62%, transparent); border-left-color: #37c46f; }
+  .perf-row.tier-mid { background: linear-gradient(90deg, rgba(91,107,121,.20), rgba(91,107,121,.04) 62%, transparent); border-left-color: #7f92a1; }
+  .perf-row.tier-bad { background: linear-gradient(90deg, rgba(214,90,90,.18), rgba(214,90,90,.04) 62%, transparent); border-left-color: #d65a5a; }
+  .perf-name { color: #d7e4ee; font-size: 14px; font-weight: 600; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .perf-name .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .perf-row.is-target .perf-name { color: var(--gold); }
+  .perf-track {
+    position: relative; height: 22px; border-radius: 3px;
+    background:
+      linear-gradient(90deg,
+        rgba(214,90,90,.34) 0%, rgba(214,90,90,.34) var(--split),
+        rgba(91,107,121,.28) var(--split), rgba(91,107,121,.28) var(--good),
+        rgba(55,196,111,.32) var(--good), rgba(55,196,111,.32) 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 0 12px rgba(0,0,0,.18);
+  }
+  .perf-track::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(to right, rgba(255,255,255,.28) 0 1px, transparent 1px var(--tick));
+  }
+  .perf-bar { position: relative; z-index: 1; height: 100%; border-radius: 2px; min-width: 0; }
+  .perf-val { position: static; z-index: 2; font-size: 12px; font-weight: 700; color: #eef6fb; text-align: right; justify-self: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .perf-axis { position: relative; height: 24px; margin-left: 200px; margin-right: 62px; margin-top: 8px; border-top: 1px solid rgba(255,255,255,.18); }
+  .perf-axis span { position: absolute; top: 6px; transform: translateX(-50%); color: #aab9c6; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .perf-zones { position: relative; height: 20px; margin-left: 200px; margin-right: 62px; }
+  .perf-zones span { position: absolute; transform: translateX(-50%); top: 0; font-size: 11px; font-weight: 700; }
+  .perf-zones .bad { color: #ff9b9b; }
+  .perf-zones .avg { color: #c9d8e5; }
+  .perf-zones .good { color: #8ef0b4; }
+  .matrix-panel { max-width: 1240px; margin-left: auto; margin-right: auto; }
+  .matrix-wrap { overflow: auto; }
+  .matrix-table { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 4px; }
+  .matrix-table th {
+    background: #2b3743; color: #c8d6e2; padding: 7px 9px; border-radius: 3px;
+    font-size: 10px; font-weight: 650; white-space: nowrap; text-align: center;
+  }
+  .matrix-table th.corner { text-align: left; color: #8ea3b5; font-weight: 500; background: transparent; font-size: 10px; }
+  .matrix-table th.row-head { text-align: left; min-width: 165px; }
+  .matrix-table th .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+  .matrix-table td { padding: 0; }
+  .matrix-cell { display: flex; gap: 3px; justify-content: center; }
+  .pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 31px; height: 25px; padding: 0 5px; border-radius: 3px;
+    background: var(--c); color: #101820; font-size: 11px; font-weight: 800;
+  }
+  .pill.zero { background: transparent; color: #5d6e7c; border: 1px solid rgba(255,255,255,.08); font-weight: 500; }
+  .matrix-note { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; color: var(--faint); font-size: 10px; line-height: 1.6; }
+  .matrix-note b { color: #c7d4df; font-weight: 600; }
+  .target-head { display: flex; align-items: baseline; gap: 12px; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+  .target-head .name { color: #fff; font-size: 25px; font-weight: 800; letter-spacing: -.01em; }
+  .target-head .team { color: var(--muted); font-size: 12px; }
+  .target-warning { border: 1px solid rgba(255,178,74,.42); background: rgba(196,120,31,.14); color: #f6dcb9; border-radius: 8px; padding: 9px 12px; font-size: 11px; line-height: 1.55; margin-bottom: 12px; }
+  .player-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .radar-panel {
+    background:
+      radial-gradient(circle at 50% 46%, rgba(85, 72, 39, .65), rgba(27, 31, 36, .92) 68%),
+      #1b1f24;
+    border-color: rgba(218, 180, 95, .35);
+  }
+  .radar-panel h3, .compare-panel h3 { margin: 0; color: #f5e7bd; font-size: 14px; font-weight: 700; }
+  .radar-panel .panel-sub, .compare-panel .panel-sub { color: #b8aa88; }
+  #radar-chart { width: 100%; height: 430px; margin-top: 2px; }
+  .player-grid.solo .radar-panel, .player-grid.solo .compare-panel { display: none; }
+  .solo-callout { margin: 6px 0 14px; }
+  .radar-legend { display: flex; justify-content: center; gap: 18px; color: #d8c9a2; font-size: 10px; margin-top: 2px; }
+  .legend-line { display: inline-block; width: 22px; height: 2px; margin-right: 6px; vertical-align: 3px; }
+  .legend-line.gold { background: #ffd24a; box-shadow: 0 0 5px rgba(255,210,74,.55); }
+  .legend-line.red { background: #ff4d4d; }
+  .compare-panel {
+    background:
+      radial-gradient(circle at 50% 44%, rgba(255,210,74,.13), transparent 55%),
+      linear-gradient(180deg, #26323b, #1b222a);
+    border-color: rgba(218,180,95,.34);
+    box-shadow: 0 0 30px rgba(255,210,74,.10), inset 0 0 44px rgba(255,210,74,.035);
+    display: flex; flex-direction: column;
+  }
+  .compare-body { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 430px; width: 100%; padding: 0 14px; }
+  #compare-chart { width: 100%; max-width: 620px; margin: 0 auto; }
+  .cmp-row { display: flex; flex-direction: column; gap: 4px; margin: 11px 0; }
+  .cmp-label { text-align: left; color: #d6e4ee; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-shadow: 0 0 8px rgba(255,210,74,.14); }
+  .cmp-track {
+    position: relative; width: 100%; height: 18px; border-radius: 3px;
+    background: rgba(255,255,255,.065);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), inset 0 0 18px rgba(0,0,0,.22), 0 0 12px rgba(255,210,74,.055);
+  }
+  .cmp-fill { height: 100%; border-radius: 3px; box-shadow: 0 0 14px var(--glow), 0 0 4px var(--glow); }
+  .cmp-avg { position: absolute; top: -4px; bottom: -4px; left: 70%; width: 1px; background: rgba(255,255,255,.92); box-shadow: 0 0 7px rgba(255,255,255,.65); }
+  .cmp-inline { position: absolute; top: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 11px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 7px rgba(0,0,0,.6); }
+  .cmp-inline .arrow { font-size: 9px; margin-left: 3px; }
+  .cmp-inline .arrow.up { color: #b7ffca; }
+  .cmp-inline .arrow.down { color: #ffc0c0; }
+  .cmp-axis { position: relative; height: 19px; margin: 4px 0 0 0; border-top: 1px dashed rgba(255,255,255,.22); }
+  .cmp-axis span { position: absolute; top: 3px; left: 70%; transform: translateX(-50%); color: #d5c28e; font-size: 9px; font-weight: 700; text-shadow: 0 0 7px rgba(255,210,74,.25); }
+  .cmp-note { color: #8899a8; font-size: 10px; line-height: 1.6; margin-top: 8px; }
+  .empty { color: var(--muted); font-size: 13px; padding: 18px 4px; }
+  .methodology { max-width: 1380px; margin: 22px auto 0; border-top: 1px solid var(--line); padding-top: 16px; color: #8293a3; font-size: 12px; line-height: 1.8; }
+  .methodology strong { display: block; color: #bac8d4; font-size: 13px; margin-bottom: 5px; }
+  .methodology ul { margin: 0; padding-left: 18px; }
+  footer { color: var(--faint); font-size: 11px; line-height: 1.75; border-top: 1px solid var(--line); margin-top: 14px; padding-top: 14px; }
+  footer strong { color: #aebdcb; font-weight: 600; }
+  footer code { color: #9fb2c2; font-family: Consolas, monospace; }
+  @media (max-width: 1200px) {
+    .page { padding: 22px 18px 36px; }
+    .hero { align-items: flex-start; flex-direction: column; }
+    .scoreboard { width: 100%; justify-content: flex-start; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .player-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 720px) {
+    h1 { font-size: 27px; }
+    .score-team { min-width: 120px; }
+    .score-team .team-score { font-size: 34px; }
+    .cards { grid-template-columns: 1fr; }
+    .perf-row { grid-template-columns: 120px minmax(0, 1fr) 46px; }
+    .perf-axis, .perf-zones { margin-left: 130px; margin-right: 56px; }
+    .score-team .team-score { font-size: 48px; }
+    .mvp-card { width: 100%; }
+    .controls .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">CS2 MATCH REPORT</div>
+      <h1><span class="map">{{ report.meta.map }}</span><span class="map-sub">单图数据报告</span></h1>
+      <div class="meta">
+        {% if report.meta.mode == 'live' %}来源: <code>{{ report.meta.demo_file }}</code>{% else %}demo: <code>{{ report.meta.demo_file }}</code>{% endif %}
+        &nbsp;·&nbsp; 生成: {{ report.meta.generated_at }}
+      </div>
+    </div>
+    <div class="scoreboard">
+      {% for team in report.summary.teams %}
+      <div class="score-team" style="--team: {{ team.color }}">
+        <div class="team-name">{{ team.name }}</div>
+        <div class="team-score">{{ team.score }}</div>
+      </div>
+      {% if not loop.last %}<div class="score-colon">:</div>{% endif %}
+      {% endfor %}
+      {% if report.summary.mvp %}
+      <div class="mvp-card">
+        <span class="badge">MVP</span>
+        <div class="name">{{ report.summary.mvp.name }}</div>
+        <div class="rating">Rating ≈ {{ '%.2f'|format(report.summary.mvp.rating) }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if report.validation.status == 'verified' %}
+  <div class="banner banner-ok">
+    <div>
+      <strong>✓ {{ report.validation.title or '精确字段已校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
+      {% if report.validation.checks %}
+      <details>
+        <summary>查看校验明细（{{ report.validation.checks|length }} 项）</summary>
+        <div>
+          {% for check in report.validation.checks %}
+            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+  {% elif report.validation.status == 'live' %}
+  <div class="banner banner-live">
+    <div>
+      <strong>◉ {{ report.validation.title or 'GSI 实时数据' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.incomplete %}
+      <div>缺口：{{ report.validation.incomplete|join('；') }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% elif report.validation.status == 'partial' %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ {{ report.validation.title or '部分字段已校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.checks %}
+      <details>
+        <summary>查看校验明细</summary>
+        <div>
+          {% for check in report.validation.checks %}
+            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ {{ report.validation.title or '精确字段未校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="controls">
+    <span class="control-label">视图</span>
+    <div class="segmented" id="side-toggle">
+      <button type="button" data-side="ALL" class="active">All</button>
+      <button type="button" data-side="T">T</button>
+      <button type="button" data-side="CT">CT</button>
+    </div>
+  </div>
+
+  <section class="panel table-panel">
+    <div class="panel-head">
+      <div><h2>Match stats</h2></div>
+    </div>
+    <div class="table-wrap">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>K-D</th>
+            <th>+/-</th>
+            <th>K/D</th>
+            <th>K (HS)</th>
+            <th>D</th>
+            <th>A</th>
+            <th>KAST<span class="ref-tag">推断</span></th>
+            <th>Open Kills<span class="ref-tag">参考</span></th>
+            <th>ADR</th>
+            <th>Swing<span class="ref-tag">近似</span></th>
+            <th>Rating ≈</th>
+          </tr>
+        </thead>
+        <tbody id="stats-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel perf-panel">
+    <div class="panel-head">
+      <div><h2>Performance — Rating ≈</h2></div>
+    </div>
+    <div class="perf-chart" id="perf-chart"></div>
+  </section>
+
+  {% if report.matrix.available %}
+  <section class="panel matrix-panel">
+    <div class="panel-head">
+      <div><h2>Kill matrix</h2></div>
+      <div class="segmented" id="matrix-scope">
+        {% for scope in report.matrix.scopes %}
+        <button type="button" data-scope="{{ scope.key }}" class="{{ 'active' if loop.first else '' }}">{{ scope.label }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="matrix-wrap" id="matrix-wrap"></div>
+  </section>
+  {% endif %}
+
+  <section class="player-section">
+    <div class="panel-head">
+      <div>
+        <h2>Player performance overview</h2>
+      </div>
+    </div>
+    <div class="target-head">
+      <span class="name" id="target-name">{{ report.target.name if report.target else '—' }}</span>
+      <span class="team" id="target-team">{{ report.target.team_name if report.target else '' }}</span>
+    </div>
+    <div id="target-note"></div>
+    {% if report.meta.player_count < 2 %}
+    <div class="callout solo-callout">
+      只有本地玩家（未进入观察者模式）：没有其余 9 人和全场平均，雷达与对比条已隐藏。
+      完整 10 人请在 CS2 控制台输入 <code>spectate</code>，或在对局结束后用 demo 补全。
+    </div>
+    {% endif %}
+    <div class="player-grid{% if report.meta.player_count < 2 %} solo{% endif %}">
+      <div class="panel radar-panel">
+        <div class="panel-head">
+          <div>
+            <h3>雷达图</h3>
+          </div>
+        </div>
+        <div id="radar-chart"></div>
+        <div class="radar-legend">
+          <span><i class="legend-line gold"></i>玩家</span>
+          <span><i class="legend-line red"></i>全场平均</span>
+        </div>
+      </div>
+      <div class="panel compare-panel">
+        <div class="panel-head">
+          <div>
+            <h3>指标对比</h3>
+          </div>
+        </div>
+        <div class="compare-body"><div id="compare-chart"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="methodology">
+    <strong>口径说明</strong>
+    <ul>
+      <li><b>精确层</b>：Kills / Deaths / Assists / ADR / K (HS) 来自 demo 计分板属性；其中 K/D/A/ADR 已用同一场计分板截图 fixture 逐项校验，K (HS) 因截图只显示爆头百分比而未逐项校验。</li>
+      <li><b>KAST（推断）</b>：由计分板每回合 K/A/S 推断，<b>不含 traded</b>；截图没有 KAST 列，未与计分板逐项校验。</li>
+      <li><b>事件精确层</b>：Kill Matrix 从 player_death 逐条聚合，受正式回合过滤影响；本场 bot 接管导致事件归因与计分板不一致，因此隐藏，不显示错误矩阵。</li>
+      <li><b>参考层</b>：Open Kills 由计分板 kills_total 的每回合首次增量推断，标“参考”，不参与 fixture 精确层判定。</li>
+      <li><b>近似层</b>：Rating、Swing、MVP；Swing 在事件层可靠时用事件级近似，本场事件层不可靠，改用计分板每回合 K/A/D 的回合级近似；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
+      <li><b>All / T / CT</b>：All = T + CT；T/CT 分面来自计分板每回合差值。</li>
+    </ul>
+  </div>
+  <footer>
+    <div>
+      <strong>{% if report.meta.mode == 'live' %}来源：{% else %}Demo：{% endif %}</strong><code>{{ report.meta.demo_file }}</code>
+      {% if report.meta.mode != 'live' %}&nbsp;·&nbsp; SHA256: <code>{{ report.meta.demo_sha256 }}</code>{% endif %}
+    </div>
+    <div>{{ report.meta.app }} v{{ report.meta.version }} · {{ report.meta.approx_note }}</div>
+  </footer>
+
+
+</div>
+
+<script id="report-data" type="application/json">{{ data_json | safe }}</script>
+<script>{{ echarts_js | safe }}</script>
+<script>
+{% raw %}
+(function () {
+  "use strict";
+
+  const DATA = JSON.parse(document.getElementById("report-data").textContent);
+  const state = { side: "ALL", matrixScope: "all" };
+  const SIDE_LABEL = { ALL: "全场", T: "T 方", CT: "CT 方" };
+  const RADAR_ZH = { kpr: "每回合击杀", rating: "评分", impact: "影响力", adr: "回合伤害", kast: "不白给率", survival: "存活率" };
+  const bySid = new Map(DATA.players.map((p) => [p.steamid, p]));
+  const teamByKey = new Map(DATA.summary.teams.map((t) => [t.key, t]));
+  const targetName = DATA.target ? DATA.target.name : null;
+  let radarChart = null;
+
+  const $ = (sel) => document.querySelector(sel);
+
+  function esc(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[ch]));
+  }
+
+  function fixed(value, digits) {
+    const d = digits == null ? 2 : digits;
+    let n = Number(value);
+    if (!isFinite(n)) n = 0;
+    if (Math.abs(n) < Math.pow(10, -d) / 2) n = 0;
+    return n.toFixed(d);
+  }
+
+  function fixedFloor(value, digits) {
+    const d = digits == null ? 0 : digits;
+    let n = Number(value);
+    if (!isFinite(n)) n = 0;
+    const f = Math.pow(10, d);
+    n = Math.floor(n * f + 1e-9) / f;
+    return n.toFixed(d);
+  }
+
+  function adrFixed(value) {
+    const d = DATA.meta.adr_decimals == null ? 1 : Number(DATA.meta.adr_decimals);
+    return DATA.meta.adr_rounding === "floor" ? fixedFloor(value, d) : fixed(value, d);
+  }
+
+  function signed(value, digits) {
+    const d = digits == null ? 2 : digits;
+    const n = Number(value) || 0;
+    return (n > 0 ? "+" : "") + fixed(n, d);
+  }
+
+  function pct(value, digits) {
+    return fixed(value, digits == null ? 1 : digits) + "%";
+  }
+
+  function fmtMetric(key, value, digits) {
+    if (key === "kast" || key === "survival") return pct(value, digits);
+    return fixed(value, digits);
+  }
+
+  function ratingClass(value) {
+    return value >= 1 ? "rating-hi" : "rating-lo";
+  }
+
+  function teamRow(team) {
+    const scope = state.side === "ALL" ? "全场" : SIDE_LABEL[state.side];
+    return '<tr class="team-row"><td colspan="13">' +
+      '<div class="team-chip" style="--team:' + team.color + '">' +
+        '<span class="team-bar"></span>' +
+        '<span>' + esc(team.name) + '</span>' +
+        '<span class="team-tag">' + scope + '</span>' +
+        '<span class="team-score" title="地图比分">' + team.score + '</span>' +
+      '</div>' +
+    '</td></tr>';
+  }
+
+  function statCell(value) {
+    return '<td>' + value + '</td>';
+  }
+
+  function renderStats() {
+    const body = $("#stats-body");
+    const order = DATA.table_order[state.side] || [];
+    const rows = [];
+    let lastTeam = null;
+    for (const sid of order) {
+      const player = bySid.get(sid);
+      if (!player) continue;
+      if (player.team !== lastTeam) {
+        if (lastTeam !== null) {
+          rows.push('<tr class="team-divider"><td colspan="13"></td></tr>');
+        }
+        rows.push(teamRow(teamByKey.get(player.team)));
+        lastTeam = player.team;
+      }
+      const m = player.metrics[state.side];
+      const na = !m.available;
+      const blank = '<span class="muted">—</span>';
+      const support = player.field_support && player.field_support[state.side]
+        ? new Set(player.field_support[state.side]) : null;
+      const has = (key) => !support || support.has(key);
+      const cell = (content) => na ? blank : content;
+      const cellf = (key, content) => (na || !has(key)) ? blank : content;
+      const target = targetName && player.name === targetName;
+      const kd = (m.deaths > 0) ? fixed(m.kd, 2) : (m.kills > 0 ? fixed(m.kills, 2) : "0.00");
+      rows.push(
+        '<tr class="' + (target ? "is-target" : "") + '">' +
+          '<td class="player"><div class="player-cell" style="--team:' + player.color + '">' +
+            '<span class="team-bar"></span>' +
+            '<span class="player-name">' + esc(player.name) + '</span>' +
+            (target ? '<span class="target-star">★</span>' : '') +
+          '</div></td>' +
+          statCell(cell(m.kills + "-" + m.deaths)) +
+          statCell(cell('<span class="num ' + (m.plus_minus > 0 ? "pos" : (m.plus_minus < 0 ? "neg" : "")) + '">' + (m.plus_minus > 0 ? "+" : "") + m.plus_minus + '</span>')) +
+          statCell(cell(kd)) +
+          statCell(cellf('headshot_kills', m.kills + ' <span class="small-num">(' + m.headshot_kills + ')</span>')) +
+          statCell(cell(m.deaths)) +
+          statCell(cell(m.assists)) +
+          statCell(cellf('kast', pct(m.kast, 1))) +
+          statCell(cellf('opening_kills', m.opening_kills)) +
+          statCell(cellf('adr', adrFixed(m.adr))) +
+          statCell(cellf('swing', '<span class="num ' + (m.swing_pct > 0 ? "pos" : (m.swing_pct < 0 ? "neg" : "")) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
+          statCell(cell('<span class="' + ratingClass(m.rating) + '">' + fixed(m.rating, 2) + '</span>')) +
+        '</tr>'
+      );
+    }
+    body.innerHTML = rows.join("") || '<tr><td colspan="12" class="empty">没有可显示的选手数据。</td></tr>';
+  }
+
+  function perfColor(rating) {
+    if (rating >= 1.05) return "#37c46f";
+    if (rating >= 0.96) return "#5b6b79";
+    return "#d65a5a";
+  }
+
+  function renderPerformance() {
+    const host = $("#perf-chart");
+    const order = DATA.chart_order[state.side] || [];
+    const players = order.map((sid) => bySid.get(sid)).filter(Boolean);
+    if (!players.length) {
+      host.innerHTML = '<div class="empty">没有可显示的 Rating 数据。</div>';
+      return;
+    }
+    let maxRating = 1.6;
+    for (const player of players) {
+      const m = player.metrics[state.side];
+      if (m.available) maxRating = Math.max(maxRating, m.rating * 1.08);
+    }
+    const rawMax = Math.ceil(maxRating * 20) / 20;
+    const tickStep = rawMax <= 2.0 ? 0.2 : (rawMax <= 3.0 ? 0.25 : (rawMax <= 5.0 ? 0.5 : 1.0));
+    const axisMax = Math.ceil(rawMax / tickStep) * tickStep;
+    const split = 0.85;
+    const splitPct = Math.min(100, (split / axisMax) * 100);
+    const tickPct = (tickStep / axisMax) * 100;
+    const rows = [];
+    for (const player of players) {
+      const m = player.metrics[state.side];
+      const rating = m.available ? m.rating : 0;
+      const width = Math.min(100, Math.max(0, (rating / axisMax) * 100));
+      const barColor = perfColor(rating);
+      const tier = rating >= 1.05 ? "tier-good" : (rating >= 0.96 ? "tier-mid" : "tier-bad");
+      rows.push(
+        '<div class="perf-row ' + tier + ' ' + ((targetName && player.name === targetName) ? "is-target" : "") + '">' +
+          '<div class="perf-name" title="' + esc(player.name) + '"><span class="dot" style="background:' + barColor + '"></span>' + esc(player.name) + '</div>' +
+          '<div class="perf-track" style="--split:' + splitPct.toFixed(3) + '%;--tick:' + tickPct.toFixed(3) + '%;--good:' + Math.min(100, (1.2 / axisMax) * 100).toFixed(3) + '%">' +
+            '<div class="perf-bar" style="width:' + width.toFixed(3) + '%;background:' + barColor + '"></div>' +
+          '</div>' +
+          '<span class="perf-val">' + (m.available ? fixed(rating, 2) : "—") + '</span>' +
+        '</div>'
+      );
+    }
+    const ticks = [];
+    for (let value = 0; value <= axisMax + 1e-9; value += tickStep) {
+      const left = (value / axisMax) * 100;
+      ticks.push('<span style="left:' + left.toFixed(3) + '%">' + fixed(value, 2) + '</span>');
+    }
+    if (Math.abs((ticks.length - 1) * tickStep - axisMax) > 0.001) {
+      ticks.push('<span style="left:100%">' + fixed(axisMax, 2) + '</span>');
+    }
+    const badLeft = Math.min(100, (0.425 / axisMax) * 100);
+    const averageLeft = Math.min(100, (1.025 / axisMax) * 100);
+    const goodLeft = Math.min(100, (((1.2 + axisMax) / 2) / axisMax) * 100);
+    host.innerHTML =
+      '<div class="perf-rows">' + rows.join("") + '</div>' +
+      '<div class="perf-axis">' + ticks.join("") + '</div>' +
+      '<div class="perf-zones">' +
+        '<span class="bad" style="left:' + badLeft.toFixed(3) + '%">Bad</span>' +
+        '<span class="avg" style="left:' + averageLeft.toFixed(3) + '%">Average</span>' +
+        '<span class="good" style="left:' + goodLeft.toFixed(3) + '%">Good</span>' +
+      '</div>';
+  }
+
+  function renderMatrix() {
+    const host = $("#matrix-wrap");
+    if (!host) return;
+    const matrix = DATA.matrix;
+    if (matrix && matrix.available === false) {
+      host.innerHTML = '<div class="empty">' + esc(matrix.note || "Kill Matrix 不可用。") + '</div>';
+      return;
+    }
+    if (!matrix || !matrix.rows.length || !matrix.cols.length) {
+      host.innerHTML = '<div class="empty">没有可显示的 Kill Matrix 数据。</div>';
+      return;
+    }
+    const scope = state.matrixScope;
+    const grid = matrix.cells[scope] && matrix.cells[scope][state.side];
+    if (!grid) {
+      host.innerHTML = '<div class="empty">没有该视图的 Kill Matrix 数据。</div>';
+      return;
+    }
+    const head = ['<table class="matrix-table"><thead><tr><th class="corner">击杀者 ↓ / 被击杀者 →</th>'];
+    for (const col of matrix.cols) {
+      head.push('<th><span class="dot" style="background:' + col.color + '"></span>' + esc(col.name) + '</th>');
+    }
+    head.push('</tr></thead><tbody>');
+    for (let r = 0; r < matrix.rows.length; r++) {
+      const row = matrix.rows[r];
+      const cells = [('<tr><th class="row-head"><span class="dot" style="background:' + row.color + '"></span>' + esc(row.name) + '</th>')];
+      for (let c = 0; c < matrix.cols.length; c++) {
+        const col = matrix.cols[c];
+        const cell = grid[r][c] || { f: 0, r: 0 };
+        cells.push(
+          '<td><div class="matrix-cell">' +
+            '<span class="pill ' + (cell.f ? "" : "zero") + '" style="--c:' + row.color + '">' + (cell.f || 0) + '</span>' +
+            '<span class="pill ' + (cell.r ? "" : "zero") + '" style="--c:' + col.color + '">' + (cell.r || 0) + '</span>' +
+          '</div></td>'
+        );
+      }
+      cells.push('</tr>');
+      head.push(cells.join(""));
+    }
+    head.push('</tbody></table>');
+    host.innerHTML = head.join("");
+  }
+
+  function renderRadar() {
+    const host = $("#radar-chart");
+    if (!DATA.target || !DATA.radar) {
+      host.innerHTML = '<div class="empty">没有目标选手，无法绘制雷达图。</div>';
+      return;
+    }
+    const slice = DATA.radar[state.side];
+    if (!slice) {
+      host.innerHTML = '<div class="empty">没有该视图的雷达数据。</div>';
+      return;
+    }
+    if (DATA.meta.player_count < 2) {
+      host.innerHTML = '<div class="empty">只有本地玩家，没有全场平均，无法绘制有意义的雷达对比。请进入观察者模式或使用 demo 补全。</div>';
+      return;
+    }
+    if (!radarChart) radarChart = echarts.init(host);
+    const indicator = slice.axes.map((axis) => ({
+      name: "{en|" + axis.label + (axis.available === false ? " —" : " " + fmtMetric(axis.key, axis.value, axis.decimals)) + "}\n{zh|" + (RADAR_ZH[axis.key] || "") + "}",
+      max: axis.max
+    }));
+    const playerValues = slice.axes.map((axis) => axis.available === false ? 0 : axis.value);
+    const avgValues = slice.axes.map((axis) => axis.available === false ? 0 : axis.avg);
+    const option = {
+      backgroundColor: "transparent",
+      animationDuration: 350,
+      tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
+      radar: {
+        center: ["50%", "51%"],
+        radius: "60%",
+        splitNumber: 4,
+        indicator: indicator,
+        axisName: {
+          color: "#f2e2b8", fontSize: 12, fontWeight: 600,
+          rich: {
+            en: { color: "#f2e2b8", fontSize: 12, fontWeight: 600, lineHeight: 16 },
+            zh: { color: "#b8a887", fontSize: 9, lineHeight: 12 }
+          }
+        },
+        splitArea: { areaStyle: { color: ["rgba(255,213,122,.025)", "rgba(255,213,122,.055)"] } },
+        splitLine: { lineStyle: { color: "rgba(222,184,105,.42)" } },
+        axisLine: { lineStyle: { color: "rgba(222,184,105,.55)" } }
+      },
+      series: [{
+        type: "radar",
+        symbol: "none",
+        data: [
+          {
+            value: avgValues,
+            name: "全场平均",
+            lineStyle: { color: "#ff4d4d", width: 1.5, type: "dashed" },
+            itemStyle: { color: "#ff4d4d" },
+            areaStyle: { opacity: 0 }
+          },
+          {
+            value: playerValues,
+            name: DATA.target.name,
+            lineStyle: { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
+            itemStyle: { color: "#ffd24a" },
+            areaStyle: { color: "rgba(255,210,74,.17)" }
+          }
+        ]
+      }]
+    };
+    radarChart.setOption(option, true);
+    radarChart.resize();
+  }
+
+  function renderCompare() {
+    const host = $("#compare-chart");
+    if (!DATA.target || !DATA.compare) {
+      host.innerHTML = '<div class="empty">没有目标选手，无法绘制对比条。</div>';
+      return;
+    }
+    if (DATA.meta.player_count < 2) {
+      host.innerHTML = '<div class="empty">只有本地玩家，没有全场平均，无法生成对比条。请进入观察者模式或使用 demo 补全。</div>';
+      return;
+    }
+    const slice = DATA.compare[state.side];
+    if (!slice || !slice.rows.length) {
+      host.innerHTML = '<div class="empty">没有该视图的对比数据。</div>';
+      return;
+    }
+    const rows = slice.rows.map((row) => {
+      const available = row.available;
+      const arrow = available ? (row.better ? '<span class="arrow up">▲</span>' : (row.worse ? '<span class="arrow down">▼</span>' : "")) : "";
+      const pct = available ? row.bar_pct : 0;
+      const labelLeft = Math.min(92, Math.max(3, pct - 3));
+      return (
+        '<div class="cmp-row">' +
+          '<div class="cmp-label">' + esc(row.label) + '</div>' +
+          '<div class="cmp-track" title="玩家 ' + row.value_text + ' / 平均 ' + row.avg_text + '">' +
+            '<div class="cmp-fill" style="width:' + pct.toFixed(2) + '%;background:' + row.color + ';--glow:' + row.color + '"></div>' +
+            '<div class="cmp-avg"></div>' +
+            '<span class="cmp-inline" style="left:' + labelLeft.toFixed(2) + '%">' + (available ? row.value_text : "—") + arrow + '</span>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+    host.innerHTML = rows +
+      '<div class="cmp-axis"><span>Avg</span></div>';
+  }
+
+  function renderTargetNote() {
+    const note = $("#target-note");
+    if (!DATA.target) {
+      note.className = "target-warning";
+      note.textContent = "未找到目标选手，也没有可回退的选手数据。";
+      return;
+    }
+    if (!DATA.target.found) {
+      note.className = "target-warning";
+      note.textContent = "未找到“" + DATA.target.requested + "”，当前预览使用全场 Rating 最高的选手“" + DATA.target.name + "”。最终报告请确认选手名。";
+      return;
+    }
+    note.className = "";
+    note.innerHTML = "";
+  }
+
+  function renderAll() {
+    renderStats();
+    renderPerformance();
+    renderMatrix();
+    renderRadar();
+    renderCompare();
+    renderTargetNote();
+    document.querySelectorAll("#side-toggle button").forEach((button) => {
+      button.classList.toggle("active", button.dataset.side === state.side);
+    });
+    document.querySelectorAll("#matrix-scope button").forEach((button) => {
+      button.classList.toggle("active", button.dataset.scope === state.matrixScope);
+    });
+  }
+
+  document.querySelectorAll("#side-toggle button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.side = button.dataset.side || "ALL";
+      renderAll();
+    });
+  });
+
+  document.querySelectorAll("#matrix-scope button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.matrixScope = button.dataset.scope || "all";
+      renderMatrix();
+      document.querySelectorAll("#matrix-scope button").forEach((item) => {
+        item.classList.toggle("active", item.dataset.scope === state.matrixScope);
+      });
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (radarChart) radarChart.resize();
+  });
+
+  renderAll();
+})();
+{% endraw %}
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+CS2 Stats Report — 计分板 fixture 格式说明
+================================================
+
+fixture 是一个 JSON 文件，用来把「游戏内计分板」上的数字交给
+validate_stats.py 和 CS2Stats.exe 逐项核对。
+
+本版本精确层是 Kills / Deaths / Assists / ADR，来自 demo 的计分板属性
+（demoparser2），不是 player_death 事件。用 fixture 的 validated_fields
+声明本场截图能核对哪几项；KAST 截图里通常没有，因此不强制。
+
+------------------------------------------------
+1. 文件放哪里
+------------------------------------------------
+任选一种（程序按 demo 的 SHA-256 查找）：
+
+  A. 和 demo 放同一目录：
+       我的对局.dem
+       我的对局.fixture.json
+
+  B. 放在 fixtures/ 目录：
+       fixtures/我的对局.fixture.json
+       fixtures/任意名字.json        （只要 demo.sha256 对得上）
+
+  C. 在图形界面里用「计分板 fixture → 浏览…」手动选择。
+
+fixtures/dev_mirage.fixture.json 是公开开发 demo 的自测数据，
+不能拿来校验你的 demo；fixtures/user_dust2_20261122.fixture.json
+是本次 Dust2 用户对局的真实 fixture。
+
+------------------------------------------------
+2. 计算 demo 的 SHA-256
+------------------------------------------------
+Windows PowerShell：
+
+  Get-FileHash "D:\路径\我的对局.dem" -Algorithm SHA256
+
+把 Hash 复制到 demo.sha256。哈希用于防止拿错对局。
+
+------------------------------------------------
+3. 字段
+------------------------------------------------
+每名选手需要 name（或 steamid），以及 validated_fields 里声明的字段数值：
+
+  kills           击杀
+  deaths          死亡
+  assists         助攻
+  adr             每回合平均伤害
+  kast            KAST（百分比，填数字，不带 %；可选）
+
+推荐：
+
+  "validated_fields": ["kills", "deaths", "assists", "adr"]
+
+如果截图上还有 KAST，再加 "kast"。没有写进 validated_fields 的字段，
+不会导致 partial。
+
+ADR 取整方式必须和截图一致。游戏内计分板是向下取整：
+
+  "precision": {"adr": 0},
+  "adr_rounding": "floor"
+
+例如 2569 / 19 = 135.21，计分板显示 135；不能按四舍五入的 135 去比较，
+也不能反过来把解析值改成 135.2 再声称一致。
+
+Open Kills 是参考字段：可以填，也可以不填，不影响 verified。
+
+players 必须是数组（推荐）或「名字 -> 对象」的对象。
+demo 里的每一名选手都必须出现在 fixture 中，不能只填自己。
+
+可选：
+  steamid                 比 name 更稳，推荐同时填
+  aliases                 名字别名数组
+  demo.filename           demo 文件名
+  demo.map                地图名
+  source                  数据来源，例如「游戏内计分板截图 2026-05-01」
+  notes                   备注
+  precision               各字段显示的小数位，默认 adr/kast = 1
+  team_scores             可选，例如 {"Team A": 13, "Team B": 6}
+
+------------------------------------------------
+4. 示例（把数字换成你的）
+------------------------------------------------
+{
+  "schema": 1,
+  "demo": {
+    "filename": "我的对局.dem",
+    "sha256": "把 Get-FileHash 的 64 位哈希粘贴到这里",
+    "map": "de_dust2"
+  },
+  "source": "游戏内计分板截图（2026-11-22）",
+  "notes": "截图列：击杀/死亡/助攻/伤害/伤害每局",
+  "validated_fields": ["kills", "deaths", "assists", "adr"],
+  "precision": {"adr": 0},
+  "adr_rounding": "floor",
+  "players": [
+    {
+      "name": "Beneqin1",
+      "kills": 23,
+      "deaths": 15,
+      "assists": 7,
+      "adr": 135,
+      "opening_kills": 3
+    },
+    {
+      "name": "队友2",
+      "kills": 19,
+      "deaths": 12,
+      "assists": 2,
+      "adr": 98
+    }
+  ]
+}
+
+完整的 10 名选手都要列出来。
+
+------------------------------------------------
+5. 校验
+------------------------------------------------
+项目目录中运行（使用项目自带的 .venv）：
+
+  .venv\Scripts\python.exe validate_stats.py "D:\路径\我的对局.dem"
+
+或者显式指定 fixture：
+
+  .venv\Scripts\python.exe validate_stats.py "D:\路径\我的对局.dem" "D:\路径\我的对局.fixture.json"
+
+全部一致：退出码 0，显示 verified。
+有差异：退出码 1，逐项列出「计分板 vs 解析」；不会生成 HTML。
+fixture 缺字段：退出码 1，显示 partial。
+
+自动监听 Demo 模式默认允许「暂时没有 fixture」：仍会生成报告，但顶部标
+“未校验”；fixture 存在但不一致时仍会停止生成。想强制要求 fixture，加
+--require-fixture。
+
+------------------------------------------------
+6. 常见差异
+------------------------------------------------
+- Kills / Deaths / Assists：本版本按计分板属性读取，正常情况下应与 Tab
+  计分板一致。若不一致，先确认 demo 没有被别的程序改写、fixture 的 SHA 对得上。
+- ADR：本版本用 damage_total / 正式回合数，再按 adr_rounding 取整；
+  不要用 player_death 的伤害事件反推。
+- KAST：由每回合 K/A/S 推断，不含 traded；截图通常没有此列，报告标“推断”，
+  不要把它写成已校验。
+- K (HS) 来自计分板 headshot_kills_total，是精确属性；Open Kills 由计分板
+  kills_total 每回合首次增量推断，标“参考”。
+- Kill Matrix / A(f) / D(t)：依赖 player_death 事件。
+  当 demo 有 bot 接管导致击杀归因错位时，这些字段会被隐藏或标参考；
+  这是数据完整性保护，不是 bug。
+- Swing：事件层可靠时用事件级近似；事件层不可靠时改用计分板每回合
+  K/A/D 的回合级近似，仍标“近似”。
+- 名字不一致：优先用 steamid；名字里的特殊符号/前后空格也可能导致匹配失败。
+
+不要为了让校验通过而修改精确字段的计算代码或 fixture 数字；先查清原因。

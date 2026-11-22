@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "demo": {
+    "filename": "dev_mirage.dem",
+    "sha256": "2e0a4f9aa257af9d8e2c934dcbd6cb6a8c48483c264904ecc27218dd7d360506",
+    "map": "mirage"
+  },
+  "source": "CS2Stats scoreboard-property rebuild (demoparser2 scoreboard totals / formal rounds); public awpy-fixtures demo, not a real scoreboard",
+  "notes": "开发用自测 fixture。按正式回合（排除热身/平局/回合结束后事件）从 kills/damages 重建，不等于 awpy demo.stats，也不代表真实计分板；用户 demo 必须另外提供 Tab 计分板 fixture。 ADR updated to scoreboard damage_total / counted formal rounds after the 1.1 data-source change.",
+  "precision": {
+    "adr": 4,
+    "kast": 4
+  },
+  "players": [
+    {
+      "name": "organner.pl free trial",
+      "steamid": "76561199843627775",
+      "kills": 27,
+      "deaths": 0,
+      "assists": 4,
+      "adr": 183.230769,
+      "kast": 100.0,
+      "opening_kills": 2
+    },
+    {
+      "name": "darkness01",
+      "steamid": "76561199143010129",
+      "kills": 19,
+      "deaths": 4,
+      "assists": 4,
+      "adr": 154.0,
+      "kast": 100.0,
+      "opening_kills": 7
+    },
+    {
+      "name": "organner.pl recruit",
+      "steamid": "76561199879170232",
+      "kills": 15,
+      "deaths": 1,
+      "assists": 5,
+      "adr": 130.615385,
+      "kast": 100.0,
+      "opening_kills": 4
+    },
+    {
+      "name": "♨GlouGlouV2♨",
+      "steamid": "76561198828592291",
+      "kills": 4,
+      "deaths": 3,
+      "assists": 2,
+      "adr": 32.153846,
+      "kast": 100.0,
+      "opening_kills": 0
+    },
+    {
+      "name": "bargota22",
+      "steamid": "76561199066366898",
+      "kills": 4,
+      "deaths": 13,
+      "assists": 0,
+      "adr": 37.923077,
+      "kast": 23.076923076923077,
+      "opening_kills": 0
+    },
+    {
+      "name": "21happyend",
+      "steamid": "76561198260631836",
+      "kills": 3,
+      "deaths": 13,
+      "assists": 0,
+      "adr": 19.846154,
+      "kast": 23.076923076923077,
+      "opening_kills": 0
+    },
+    {
+      "name": "𝙟𝙆.",
+      "steamid": "76561199104304728",
+      "kills": 1,
+      "deaths": 13,
+      "assists": 0,
+      "adr": 14.153846,
+      "kast": 7.6923076923076925,
+      "opening_kills": 0
+    },
+    {
+      "name": "21airo",
+      "steamid": "76561198734120734",
+      "kills": 0,
+      "deaths": 13,
+      "assists": 0,
+      "adr": 0.0,
+      "kast": 15.384615384615385,
+      "opening_kills": 0
+    },
+    {
+      "name": "Dren",
+      "steamid": "76561199054916855",
+      "kills": 0,
+      "deaths": 13,
+      "assists": 2,
+      "adr": 16.076923,
+      "kast": 23.076923076923077,
+      "opening_kills": 0
+    },
+    {
+      "name": "TipoYaSkrr",
+      "steamid": "76561199181888914",
+      "kills": 0,
+      "deaths": 0,
+      "assists": 3,
+      "adr": 0.0,
+      "kast": 100.0,
+      "opening_kills": 0
+    }
+  ]
+}
