@@ -1,4 +1,4 @@
-CS2 数据报告 1.1.0
+CS2 数据报告 1.2.0
 ======================================================================
 把一张地图的 CS2 .dem 解析成 HLTV 风格的 HTML 报告。
 
@@ -15,13 +15,13 @@ CS2 数据报告 1.1.0
 1. 解压 onedir 压缩包，进入 CS2Stats 文件夹，双击 CS2Stats.exe。
    默认标签页是“自动监听 Demo（默认）”。
 
-2. 第一次启动会自动生成 stat.cfg 并尝试复制到 CS2 的 cfg 目录。
-   - 文件位置：CS2Stats-1.1.0-onedir\stat.cfg（onedir 中在 exe 的上一级；
+2. 第一次启动会自动生成 stats.cfg 并尝试复制到 CS2 的 cfg 目录。
+   - 文件位置：CS2Stats-1.2.0-onedir\stats.cfg（onedir 中在 exe 的上一级；
      onefile 中与 exe 同级）。
-   - 如果 CS2 的 cfg 里已有同名 stat.cfg，程序不会覆盖，
-     会改名为 stat_cs2stats.cfg。
-   - 自动定位失败会弹出目录选择；取消后主界面仍保留“配置 stat.cfg…”按钮。
-   - 开图前在 CS2 控制台执行提示的命令（exec stat 或 exec stat_cs2stats）。
+   - 旧版本生成的 stat.cfg / stat_cs2stats.cfg，在确认是本程序生成的
+     内容后会自动清理，避免旧文件残留。
+   - 自动定位失败会弹出目录选择；取消后主界面仍保留“配置 stats.cfg…”按钮。
+   - 开图前在 CS2 控制台执行提示的命令（exec stats）。
    详见下面第二节。
 
 3. “Demo 输出目录”默认指向 CS2 的 game\csgo\replays 目录，例如：
@@ -31,7 +31,7 @@ CS2 数据报告 1.1.0
    如果 replays 目录还不存在，首次开图后 CS2 会自动创建，程序不会乱建目录。
 
 4. “报告输出目录”固定为程序根目录的 output\，例如：
-       CS2Stats-1.1.0-onedir\output\
+       CS2Stats-1.2.0-onedir\output\
    对局结束、demo 解析完成后，程序在这里生成
        report_<地图>_<日期>_<时间>.html
    并用默认浏览器自动打开。目录不存在时程序自动创建。
@@ -66,20 +66,19 @@ GOTV 录的是整场 demo，解析出来自然包含全部 10 人，不需要 sp
   - 如果你习惯先 exec 自己的练习 cfg，也请先执行 GOTV 两条命令，再执行
     map 命令。
 
-程序首次运行会自动生成 stat.cfg，省得每次手打：
-  - 本地文件：exe 同级的 stat.cfg
+程序首次运行会自动生成 stats.cfg，省得每次手打：
+  - 本地文件：exe 同级的 stats.cfg
         tv_enable 1
         tv_autorecord 1
-  - 程序尝试复制到：<CS2>\game\csgo\cfg\stat.cfg
-  - 如果那里已有 stat.cfg，不覆盖，改名为 stat_cs2stats.cfg。
+  - 程序尝试复制到：<CS2>\game\csgo\cfg\stats.cfg
+  - 旧版本生成的 stat.cfg / stat_cs2stats.cfg 会被自动清理
+    （仅当内容确认是本程序生成的两行命令；外来的同名文件不会被动）。
   - 然后在 CS2 控制台、加载地图之前执行：
-        exec stat
-    如果改名为 stat_cs2stats.cfg，则执行：
-        exec stat_cs2stats
-  - 自动定位失败时，主界面有“配置 stat.cfg…”按钮，手动选择 game\csgo\cfg。
-    也可以把 exe 同级的 stat.cfg 手动复制过去。
+        exec stats
+  - 自动定位失败时，主界面有“配置 stats.cfg…”按钮，手动选择 game\csgo\cfg。
+    也可以把 exe 同级的 stats.cfg 手动复制过去。
   - 高级/兼容：主界面“高级 / GOTV 配置”仍可生成 cs2stats_gotv.cfg，
-    用于不想使用 stat.cfg 的情况；执行 exec cs2stats_gotv。
+    用于不想使用 stats.cfg 的情况；执行 exec cs2stats_gotv。
 
 注意：程序不会在你已经进入地图后偷偷改 tv_enable；配置只负责把命令写好，
 执行顺序仍要由你在加载地图前完成。
@@ -112,21 +111,30 @@ GOTV 录的是整场 demo，解析出来自然包含全部 10 人，不需要 sp
     K/D/A/ADR 逐项一致；报告顶部会显示校验横幅。
 
 推断层：
-  - KAST：由计分板每回合 K/A/S 推断，不含 traded；计分板截图没有此列，
+  - KAST：由计分板每回合 K/A/S 推断， traded（死亡后 5 秒内队友完成击杀）
+    只在事件层逐回合核对一致的回合计入；计分板截图没有此列，
     未做 fixture 校验。报告表头标“推断”。
 
 参考层：
   - Open Kills：由计分板 kills_total 的每回合首次增量推断；标“参考”，
     不参与 fixture 精确层判定。
 
-事件精确层：
-  - Kill Matrix：从 player_death 逐条聚合，受正式回合过滤影响。
-  - 如果事件归因与计分板属性不一致（例如 bot 接管导致击杀者/受害者错位），
-    Kill Matrix 会被隐藏；Swing 改用计分板每回合 K/A/D 的回合级近似，并标“近似”，绝不冒充精确。
+事件层：
+  - Kill Matrix：从 player_death 逐条聚合，但每个正式回合先与计分板
+    每回合 K/D 差分逐人核对：只有 10 人全部一致的回合才进入矩阵，
+    不一致的回合整体排除，并在报告中列出覆盖度与排除回合号。
+  - 攻击者为空的击杀（摔死/烧死/自杀等）归入单独的“环境”行/列，不丢弃。
+  - 如果没有任何回合通过核对，Kill Matrix 整块隐藏并说明原因；
+    Swing 改用计分板每回合 K/A/D 的回合级近似，并标“近似”，绝不冒充精确。
 
 近似层：
   - Rating、Swing、MK rating、经济调整、MVP。
-  - 这些不是 HLTV 官方算法，不能与 HLTV 页面逐位比对；报告底部有统一脚注。
+  - Rating 采用 Rating 2.0 近似公式：
+        0.0073×KAST% + 0.3591×KPR − 0.5329×DPR
+        + 0.2372×Impact + 0.0032×ADR + 0.1587
+    Impact = 2.13×KPR + 0.42×APR − 0.41，再加首杀与多杀回合加权；
+    报告附“Rating 分解”表，KPR/DPR/KAST/Impact/ADR 各项可单独与
+    HLTV 交叉核对；但最终 Rating 不是 HLTV 官方数值，不能逐位比对。
 
 T/CT 分面：
   - 主表、Performance、Kill Matrix（可用时）、雷达图、对比条都支持 All/T/CT；
@@ -219,9 +227,10 @@ exe 版不需要手动跑它：生成报告时程序会自动做同一套校验�
 七、报告里有什么
 ----------------------------------------------------------------------
 1. 顶部
-   - 大号地图标题、生成时间、两队比分；
+   - 大号地图标题（渐变）、生成时间、两队发光比分；
    - MVP 金卡：获胜队伍中 Rating 最高的选手，基于本报告近似 Rating；
-   - 校验状态横幅；绿色“已校验”表示 fixture 指定字段全部对上。
+   - 校验状态横幅；绿色“已校验”表示 fixture 指定字段全部对上；
+   - 解析提示横幅：逐回合核对覆盖度、事件层降级等提示会集中列在这里；
    - 不再显示平均 Rating、总回合、总击杀、队伍总击杀。
 
 2. Match stats 主表
@@ -229,26 +238,32 @@ exe 版不需要手动跑它：生成报告时程序会自动做同一套校验�
      ADR / Swing（近似）/ Rating（近似）
    - 支持 All / T / CT 三态切换。
 
-3. Performance Rating 条形图
+3. Rating 分解表
+   - 每人一行：KPR / DPR / KAST / Impact / ADR / Swing / econ Δ / Rating；
+   - 用于与 HLTV 官方分项交叉核对，或排查 Rating 异常来自哪一项。
+
+4. Performance Rating 条形图
    - 每个选手一根条，长度是 Rating（近似值）；
    - 仅此图按 Rating 从高到低统一排序，不分队伍；
    - 颜色：Rating ≥ 1.05 绿色，0.96–1.04 中性深色，≤ 0.95 红色。
 
-4. Kill matrix
+5. Kill matrix
    - 行 = 击杀者（Team A），列 = 被击杀者（Team B）；
-   - 每格左侧数字 = 行选手击杀列选手，右侧数字 = 反向击杀；
-   - 数据来自 demo 的 player_death 逐条击杀事件；
-   - 仅当事件层与计分板属性一致时显示；不一致时整块隐藏。
-   - 支持 All / First kills；AWP 已移除。
-   - 本图是跨队矩阵；队内击杀不显示。
+   - 每格左侧数字 = 行选手击杀列选手，右侧数字 = 反向击杀，颜色越深次数越多；
+   - 数据来自 demo 的 player_death 逐条击杀事件，且每个回合先与计分板
+     差分核对，仅保留完全一致的回合；覆盖度与排除回合号显示在标题下方；
+   - 支持“击杀视角 / 死亡视角”切换（死亡视角 = 行列转置）；
+   - 支持 All / First kills / AWP / 手枪 四种范围；
+   - 攻击者为空的死亡归入“环境”行/列，不丢弃；
+   - 本图是跨队矩阵；队内击杀不显示；没有回合通过核对时整块隐藏并说明。
 
-5. Player performance overview
+6. Player performance overview
    - 目标选手的六维雷达图：KPR / Rating / Impact / ADR / KAST / Surviving；
    - 与全场平均对比（金色 = 选手，红色虚线 = 全场平均）；
    - 七项指标对比条：KPR / DPR / KAST / MK rating / Swing / ADR / Rating；
    - 雷达轴为英文 + 小号中文；All/T/CT 联动。
 
-6. 页面底部
+7. 页面底部
    - 统一“口径说明”：K/D/A/ADR 来源、KAST 推断、事件层降级、
      Rating/Swing/MVP 近似、All/T/CT 定义；
    - 只针对当前地图，不做跨图汇总。
@@ -302,6 +317,12 @@ cs2stats/scoreboard.py；换版本需要同步调整并重跑两份 fixture。
   .venv\Scripts\python.exe run_app.py "D:\...\我的对局.dem" ^
       --fixture "D:\...\我的对局.fixture.json"
 
+解析缓存：
+  demo 解析结果按文件 SHA-256 缓存在程序根目录 cache\，同一 demo 第二次
+  解析只需零点几秒；demo 文件变了会自动重新解析。
+  .venv\Scripts\python.exe run_app.py "D:\...\我的对局.dem" --no-cache   （跳过缓存）
+  .venv\Scripts\python.exe run_app.py --clear-cache                       （清空缓存）
+
 打包（默认 onedir）：
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 
@@ -317,7 +338,8 @@ validate_stats.py 和必要的 fixture 说明复制进包；开发期的 GSI 实
 ----------------------------------------------------------------------
 CS2Stats.exe                 主程序（onedir 版在 CS2Stats 文件夹内）
 output/                      报告输出目录（首次生成报告时自动创建）
-stat.cfg                     首次运行生成的 GOTV 命令（两行）
+cache/                       解析结果缓存（首次解析后自动创建，可整目录删除）
+stats.cfg                    首次运行生成的 GOTV 命令（两行）
 settings.json                首次运行标记、手动选择的目录
 run_app.py                   源码入口
 validate_stats.py            独立校验脚本
@@ -332,28 +354,31 @@ requirements.txt             运行依赖
 requirements-build.txt       打包依赖
 cs2stats/                    源码包
   gotv_config.py             生成/安装兼容 GOTV cfg，定位 replays 目录
-  first_run.py               首次运行生成/复制 stat.cfg
-  paths.py                   exe 同级 output/settings/stat.cfg 路径
+  first_run.py               首次运行生成/复制 stats.cfg，清理旧版 cfg
+  paths.py                   exe 同级 output/settings/stats.cfg 路径
   demo_watch.py              监听 demo 文件夹、稳定等待、去重
-  scoreboard.py              从 demoparser2 计分板属性重写精确层
+  scoreboard.py              从 demoparser2 计分板属性重写精确层；事件层逐回合核对
   demo_parser.py             demo 解析与 T/CT 重建
   validation.py              fixture 校验
   report_data.py             报告数据
-  rating.py                  Rating/Swing 近似
+  rating.py                  Rating 2.0 近似 / Swing
+  cache.py                   解析结果缓存（sha256 + 版本守卫）
   render.py                  HTML 渲染
   app.py / gui.py / cli.py   流程、界面、命令行
-  templates/                 Jinja2 模板（本版冻结，未改动）
-  static/echarts.min.js      离线图表库（本版冻结，未改动）
+  templates/                 Jinja2 模板
+  static/echarts.min.js      离线图表库
 
 
 十二、边界与承诺
 ----------------------------------------------------------------------
   - 精确层（K/D/A、ADR、K(HS)）来自计分板属性，K/D/A/ADR 用 fixture 校验；
-  - KAST 由计分板每回合 K/A/S 推断，不含 traded；截图无此列，未校验；
+  - KAST 由计分板每回合 K/A/S 推断，traded 只计入逐回合核对一致的回合；
+    截图无此列，未校验；
   - Open Kills 由计分板 kills_total 每回合首次增量推断，标“参考”；
-  - Kill Matrix 依赖事件层，事件归因不可信时隐藏；Swing 改用计分板每回合 K/A/D 近似；
-  - Rating / Swing / MK rating / 经济调整 / MVP 是近似值，
-    不是 HLTV 官方算法；
+  - Kill Matrix 依赖事件层，逐回合与计分板差分核对，仅保留一致回合；
+    无一致回合时隐藏；Swing 改用计分板每回合 K/A/D 近似；
+  - Rating（Rating 2.0 近似公式）/ Swing / MK rating / 经济调整 / MVP
+    是近似值，不是 HLTV 官方算法；
   - 自动监听只读本地 demo 文件夹，不上传任何数据；
   - 不伪造队友数据：demo 里有几个人就显示几个人；
   - 文件未稳定不解析；损坏或不完整的 demo 会给出错误/缺口提示，不猜测补齐；

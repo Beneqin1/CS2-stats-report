@@ -201,6 +201,20 @@ class ParsedDemo:
     death_diagnostics: list[dict[str, Any]] = field(default_factory=list)
     field_availability: dict[int, dict[str, bool]] = field(default_factory=dict)
     scoreboard_meta: dict[str, Any] = field(default_factory=dict)
+    # Raw kill events for formal rounds, kept so the scoreboard layer can
+    # rebuild the Kill Matrix from only the rounds whose event attribution
+    # matches the scoreboard deltas.  ``attacker`` is None for world/suicide
+    # deaths.  Keys: round_index, tick, attacker, victim, weapon, headshot,
+    # opening.
+    kill_feed: list[dict[str, Any]] = field(default_factory=list)
+    # scope -> victim side -> victim steamid -> count (world/suicide deaths)
+    matrix_world: dict[str, dict[str, dict[int, int]]] = field(default_factory=dict)
+    # {"covered": int, "total": int, "excluded_rounds": [int], "reason": str}
+    matrix_coverage: dict[str, Any] = field(default_factory=dict)
+    # Self-consistency findings (score sums, kill/death totals, ...).
+    consistency_warnings: list[str] = field(default_factory=list)
+    # True when this object came from the on-disk parse cache.
+    from_cache: bool = False
 
     def player_by_name(self, name: str) -> Player | None:
         needle = (name or "").strip().casefold()
@@ -779,6 +793,17 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
     if demo_path.suffix.lower() != ".dem":
         raise ParseError(f"文件不是 .dem：{demo_path.name}")
 
+    from .cache import load_cached, store
+    from .utils import sha256_file as _sha256
+
+    try:
+        digest = _sha256(demo_path)
+    except OSError as exc:
+        raise ParseError(f"无法读取 demo 文件：{demo_path}（{exc}）") from exc
+    cached = load_cached(demo_path, digest)
+    if cached is not None:
+        return cached
+
     try:
         from awpy import Demo
     except Exception as exc:  # pragma: no cover - packaging / install problem
@@ -902,9 +927,8 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
     # order matters for the health chain and the trade scan.
     kills_sorted = sorted(enumerate(kills), key=lambda pair: (_as_int(pair[1].get("tick")), pair[0]))
     opening_seen: set[int] = set()
-    matrix: dict[str, dict[str, dict[tuple[int, int], int]]] = {
-        scope: {side: {} for side in SIDES} for scope in ("all", "first", "awp")
-    }
+    kill_feed: list[dict[str, Any]] = []
+    matrix: dict[str, dict[str, dict[tuple[int, int], int]]] = {}
     for original_index, kill in kills_sorted:
         round_index = round_of(kill.get("tick"))
         if round_index is None or not rounds[round_index].is_formal:
@@ -919,6 +943,26 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
         victim_team = team_of.get(victim)
         attacker_side = side_of_player(round_index, attacker, attacker_side_raw) if attacker >= 0 else attacker_side_raw
         victim_side = side_of_player(round_index, victim, victim_side_raw) if victim >= 0 else victim_side_raw
+
+        # Keep every formal-round death for the scoreboard-gated Kill Matrix
+        # rebuild.  World/self kills have no attacker player; they are stored
+        # with attacker=None instead of being dropped.
+        if victim_obj is not None:
+            kill_feed.append(
+                {
+                    "round_index": round_index,
+                    "tick": _as_int(kill.get("tick")),
+                    "attacker": (
+                        attacker
+                        if attacker >= 0 and attacker != victim and attacker_obj is not None
+                        else None
+                    ),
+                    "victim": victim,
+                    "weapon": str(kill.get("weapon") or ""),
+                    "headshot": bool(kill.get("headshot")),
+                    "opening": bool(kill.get("_opening")),
+                }
+            )
 
         # Swing proxy: measure the man advantage before this kill.
         if (
@@ -965,14 +1009,6 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
             team_alive[victim_team] = max(0, team_alive.get(victim_team, 0) - 1)
 
         kill_is_enemy = attacker != victim and attacker >= 0 and _is_enemy(attacker_side_raw, victim_side_raw)
-        if kill_is_enemy and attacker_side in SIDES:
-            is_first_kill = round_index not in opening_seen
-            is_awp = "awp" in str(kill.get("weapon") or "").lower()
-            for scope, matches in (("all", True), ("first", is_first_kill), ("awp", is_awp)):
-                if not matches:
-                    continue
-                cell = matrix[scope][attacker_side]
-                cell[(attacker, victim)] = cell.get((attacker, victim), 0) + 1
         if kill_is_enemy and attacker_obj is not None:
             attacker_obj.raw.kills += 1
             attacker_obj.kill_rounds[round_index] = attacker_obj.kill_rounds.get(round_index, 0) + 1
@@ -1303,7 +1339,7 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
 
     parsed = ParsedDemo(
         path=demo_path,
-        sha256=sha256_file(demo_path),
+        sha256=digest,
         map_name=map_name,
         tickrate=tickrate,
         header=header,
@@ -1320,10 +1356,12 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
         stats_differences=list(internal_rows),
         dropped_rounds=dropped_rounds,
         death_diagnostics=death_diagnostics,
+        kill_feed=kill_feed,
     )
     try:
         from .scoreboard import apply_scoreboard
         apply_scoreboard(parsed, str(demo_path))
     except Exception as exc:
         parsed.side_warnings.append(f"计分板属性层未应用（{exc}）；精确层保持事件重建。")
+    store(parsed)
     return parsed

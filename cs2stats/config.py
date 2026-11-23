@@ -8,7 +8,7 @@ approximation and is labelled as such in the report.
 from __future__ import annotations
 
 APP_NAME = "CS2 Stats Report"
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 TARGET_DEFAULT = "Beneqin1"
 
 SIDE_T = "T"
@@ -21,19 +21,24 @@ TEAM_COLORS = {
     "B": "#ffff00",  # HLTV-like yellow
 }
 
-# Approximate Rating 2.1 coefficients.  Direction reference: public Rating 3.0
-# notes describe a lower Swing weight and a higher kill weight; these numbers
-# are NOT HLTV's official formula.
-RATING_KAST_COEF = 0.0058
-RATING_KPR_COEF = 0.4500
+# Rating 2.0 approximation coefficients (the public formula circulating with
+# the HLTV Rating 2.0 announcement).  KAST enters as a percentage (0-100).
+# These numbers are NOT HLTV's official implementation; the report labels the
+# result as approximate.
+RATING_KAST_COEF = 0.0073
+RATING_KPR_COEF = 0.3591
 RATING_DPR_COEF = -0.5329
 RATING_IMPACT_COEF = 0.2372
 RATING_ADR_COEF = 0.0032
 RATING_INTERCEPT = 0.1587
 
+# Impact: the classic 2.13*KPR + 0.42*APR - 0.41 base, plus explicit opening
+# kill and multi-kill round weighting (per round, labelled approximate).
 IMPACT_KPR_COEF = 2.13
 IMPACT_APR_COEF = 0.42
 IMPACT_INTERCEPT = -0.41
+IMPACT_OPENING_COEF = 0.50
+IMPACT_MULTIKILL_COEF = 0.30
 
 ECON_KILL_COEF = 0.30
 ECON_KILL_MIN = 0.70

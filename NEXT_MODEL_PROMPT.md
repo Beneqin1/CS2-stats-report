@@ -4,7 +4,7 @@
 
 ---
 
-你是一名接手 **CS2Stats** 项目的资深 Python / Windows 桌面应用工程师。项目已经可用，当前版本 **1.1.0**，交付形态是 Windows `.exe`（PyInstaller onedir），用户是编程小白。你的任务是在**不破坏数据准确性**的前提下继续改进它。
+你是一名接手 **CS2Stats** 项目的资深 Python / Windows 桌面应用工程师。项目已经可用，当前版本 **1.2.0**，交付形态是 Windows `.exe`（PyInstaller onedir），用户是编程小白。你的任务是在**不破坏数据准确性**的前提下继续改进它。
 
 请先做三件事：
 
@@ -29,29 +29,32 @@
 当前报告包含：
 
 - Match Stats：K-D、+/-、K/D、K(HS)、D、A、KAST、Open Kills、ADR、Swing、Rating；All/T/CT 三态。
+- Rating 分解表：KPR / DPR / KAST / Impact / ADR / Swing / econ Δ / Rating 逐项对照。
 - Performance Rating 横向条：全局 Rating 降序，三档颜色。
-- Kill Matrix：事件可靠时显示；不可靠时整块隐藏。
+- Kill Matrix：逐回合与计分板差分核对，仅保留一致回合；击杀/死亡双视角 + All / First kills / AWP / 手枪范围；attacker 为空的死亡归入“环境”行/列；无一致回合时整块隐藏。
 - 目标选手雷达图 + 对比条形图。
-- 头部大比分 + MVP；底部统一口径说明。
+- 头部渐变地图大标题 + 发光比分 + MVP 金卡；校验横幅 + 解析提示横幅；底部统一口径说明。
 
 ## 数据管线（关键，别搞反）
 
 ```text
 awpy Demo
-  → demo_parser.load_demo()
+  → demo_parser.load_demo()      （先查 cache\；命中直接返回）
       → Round 过滤（formal rounds）
       → events 重建 raw Counters（kills/deaths/...）
+      → kill_feed（正式回合全部击杀事件，attacker=None 表示环境/自杀）
       → ParsedDemo（exact 初始为事件值）
   → scoreboard.apply_scoreboard(parsed, demo_path)
       → demoparser2.parse_ticks()
       → 最终 tick 计分板 K/D/A/damage/headshot
       → 每回合总分差值 → KAST / 多杀 / side 计数
       → 覆盖 player.exact（精确层）
-      → 事件与计分板不一致时降级：
-          event_reliable=False
-          matrix 清空
-          opening/headshot 可用性按来源设置
-          swing 用每回合 K/A/D fallback
+      → 逐回合核对：每回合 10 人的事件 K/D 与计分板差分完全一致
+          → 该回合进 reliable_rounds；Kill Matrix 由这些回合重建
+          → 不一致回合整体排除，回合号写入 matrix_coverage
+      → 无任何一致回合时 matrix 隐藏（matrix_hidden）
+      → KAST traded 只计 reliable_rounds
+      → 自洽性检查 → consistency_warnings → 报告“解析提示”横幅
   → report_data.build_report()
   → render.py + report.html.j2 生成单文件 HTML
 ```
@@ -61,28 +64,29 @@ awpy Demo
 1. **K/D/A/ADR 的精确来源是 `demoparser2` 计分板属性**，不是 `player_death`。原因：某些 demo 有 bot 接管（`bot_takeover`），`player_death` 的 attacker/victim 会错位，曾出现 Beneqin1 43/30 而计分板是 23/15。
 2. ADR 用 `damage_total / 正式回合数`，按截图口径 **floor**（向下取整）；不要改成四舍五入。
 3. 不要为了“看起来完整”而把 KAST、Open Kills、Kill Matrix 标成精确。截图没有 KAST/Open Kills，无法 fixture 校验。
-4. 事件层不可靠时，Kill Matrix 必须隐藏，不能输出全 0 矩阵冒充“没有击杀”。
-5. `player_death` 只在 `event_reliable=True` 时用于 Kill Matrix / A(f) / D(t)；不要在不可靠 demo 上重新启用。
-6. Rating / Swing / MVP 是近似值，HTML 必须保留“非 HLTV 官方数值”的脚注。
+4. Kill Matrix 只由 `reliable_rounds`（逐回合与计分板差分完全一致的回合）重建；不要把核对失败的回合混进去，也不要在没有任何一致回合时输出全 0 矩阵冒充“没有击杀”。
+5. `player_death` 的归因以 SteamID 为主键；attacker 为空的死亡归入“环境”行/列，不得丢弃也不得冒充普通击杀。
+6. Rating / Swing / MVP 是近似值（Rating 2.0 近似公式，系数在 `cs2stats/config.py`），HTML 必须保留“非 HLTV 官方数值”的脚注。
 7. 改动精确层后，必须重新跑用户 fixture 和 dev fixture；不要只跑单元测试。
-8. 当前 HTML 模板是用户确认过的成品，改 UI 前先征得用户同意；不要为了重构而重排颜色、表格列、脚注位置。
+8. 解析缓存（`cs2stats/cache.py`）以 `CACHE_VERSION` + awpy/demoparser2 版本守卫；改动解析输出结构时必须递增 `CACHE_VERSION`，否则旧缓存会静默污染结果。
 
 ## 代码地图
 
 | 文件 | 职责 |
 |---|---|
-| `cs2stats/demo_parser.py` | awpy 读取、正式回合过滤、事件重建、T/CT 分面、首杀/交易/多杀、ParsedDemo |
-| `cs2stats/scoreboard.py` | demoparser2 计分板属性层、KAST 回合差分、Swing fallback、可用性/降级 |
+| `cs2stats/demo_parser.py` | awpy 读取、正式回合过滤、事件重建、kill_feed、T/CT 分面、首杀/交易/多杀、ParsedDemo、缓存接入 |
+| `cs2stats/scoreboard.py` | demoparser2 计分板属性层、KAST 回合差分（含 traded）、逐回合核对重建 Kill Matrix、自洽性检查、可用性/降级 |
 | `cs2stats/validation.py` | fixture 校验、`validated_fields`、ADR floor、错误报告 |
-| `cs2stats/report_data.py` | 报表 JSON：players/teams/radar/compare/matrix/meta/MVP |
-| `cs2stats/rating.py` | 近似 Rating / Impact / Swing 公式 |
+| `cs2stats/report_data.py` | 报表 JSON：players/teams/radar/compare/matrix/meta/MVP/Rating 分解 |
+| `cs2stats/rating.py` | Rating 2.0 近似公式 / Impact / Swing |
+| `cs2stats/cache.py` | 解析结果缓存（sha256 + CACHE_VERSION + 解析器版本守卫） |
 | `cs2stats/render.py` | Jinja2 + ECharts 内嵌 |
 | `cs2stats/templates/report.html.j2` | 单文件报告的 HTML/CSS/JS |
 | `cs2stats/demo_watch.py` | 监听 demo 文件夹、稳定等待、去重、报告生成 |
-| `cs2stats/first_run.py` | `stat.cfg` / `settings.json` / 首次运行 |
+| `cs2stats/first_run.py` | `stats.cfg` / 旧版 cfg 清理 / `settings.json` / 首次运行 |
 | `cs2stats/paths.py` | `output/`、`settings.json`、onedir 根目录 |
-| `cs2stats/gui.py` | Tkinter 双标签页 |
-| `cs2stats/cli.py` | `--watch`、`--watch-once`、手动 demo、`--gsi`（旧实验功能） |
+| `cs2stats/gui.py` | Tkinter 双标签页（HLTV 深色主题） |
+| `cs2stats/cli.py` | `--watch`、`--watch-once`、手动 demo、`--no-cache` / `--clear-cache`、`--gsi`（旧实验功能） |
 | `validate_stats.py` | 独立 fixture 校验脚本 |
 | `build_exe.ps1` | onedir PyInstaller 打包 |
 
@@ -96,9 +100,10 @@ awpy Demo
    - ADR floor；
    - `validated_fields` 缺 KAST 不判 partial；
    - watcher 启动只处理最新一个、去重、稳定等待；
-   - `paths.app_home` onedir/onefile/源码三态。
-2. **KAST 含 traded**：当前只用每回合 K/A/S 差分，不含 traded。若能可靠拿到事件层，可加 traded 回合；但必须保留“事件不可靠时退回不含 traded”的降级。
-3. **Kill Matrix 恢复**：bot 接管 demo 目前隐藏矩阵。可研究 `demoparser2` 的 tick 级 kills/deaths 差分、或解析 `player_death` 时用 `userid`→controller 映射修复归因；未验证前不要重新展示。
+   - `paths.app_home` onedir/onefile/源码三态；
+   - `cache` 的 CACHE_VERSION 失效路径。
+2. **KAST traded 覆盖率**：traded 判定依赖事件层逐回合核对，核对失败的回合计入不了 traded；这是有意为之的保守口径，不要用全局事件开关放开。
+3. **Kill Matrix 覆盖率**：矩阵只含核对一致回合。可研究 `demoparser2` tick 级差分修复事件归因本身（曾观察到击杀错记到队友头上），修好归因才能让 100% 回合进矩阵；未验证前不要扩大覆盖。
 4. **Open Kills**：当前用计分板 `kills_total` 每回合首次增量推断，标“参考”。若能拿到可靠事件，再升级。
 5. **打包体积**：onedir 约 378 MB，主要来自 polars/awpy/pandas/numpy/arrow。可尝试把计分板层拆成独立可选依赖，或改用轻量解析器；但不能破坏现有精确层。
 6. **GUI**：Tkinter 可换 ttkbootstrap/PySide，但用户是小白，保持“双击→开始监听”的低认知负担。

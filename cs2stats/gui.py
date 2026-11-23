@@ -37,27 +37,85 @@ from .validation import ValidationError, ValidationFailed
 LOGGER = logging.getLogger(__name__)
 
 
+BG = "#151a20"
+PANEL = "#1f2731"
+FIELD = "#10151b"
+TEXT = "#e8eef4"
+MUTED = "#93a5b5"
+ORANGE = "#ffa028"
+ORANGE_DARK = "#cc7a00"
+LINE = "#31404f"
+
+
 def _set_theme(root: Tk) -> None:
     style = ttk.Style(root)
-    for theme in ("vista", "clam", "default"):
+    for theme in ("clam", "vista", "default"):
         try:
             style.theme_use(theme)
             break
         except Exception:
             continue
-    body = ("Microsoft YaHei UI", 12)
-    style.configure(".", font=body)
-    style.configure("TLabel", font=body)
-    style.configure("TButton", font=body, padding=(12, 8))
-    style.configure("TEntry", font=body, padding=6)
-    style.configure("TCheckbutton", font=body, padding=(2, 4))
-    style.configure("TNotebook.Tab", font=body, padding=(14, 9))
-    style.configure("Title.TLabel", font=("Microsoft YaHei UI", 24, "bold"))
-    style.configure("Sub.TLabel", font=body, foreground="#555555")
-    style.configure("Field.TLabel", font=body)
-    style.configure("Hint.TLabel", font=("Microsoft YaHei UI", 11), foreground="#666666")
-    style.configure("Go.TButton", font=("Microsoft YaHei UI", 14, "bold"), padding=(16, 10))
-    style.configure("Live.TLabel", font=("Microsoft YaHei UI", 12, "bold"), foreground="#0b6e99")
+    root.configure(bg=BG)
+    body = ("Microsoft YaHei UI", 13)
+    style.configure(".", font=body, background=BG, foreground=TEXT)
+    style.configure("TFrame", background=BG)
+    style.configure("TLabel", background=BG, foreground=TEXT)
+    style.configure(
+        "TButton",
+        font=body,
+        padding=(14, 9),
+        background=PANEL,
+        foreground=TEXT,
+        bordercolor=LINE,
+        focuscolor=ORANGE,
+    )
+    style.map(
+        "TButton",
+        background=[("disabled", "#1a2129"), ("pressed", ORANGE_DARK), ("active", "#2a3644")],
+        foreground=[("disabled", "#5c6b7a")],
+    )
+    style.configure(
+        "Go.TButton",
+        font=("Microsoft YaHei UI", 15, "bold"),
+        padding=(18, 11),
+        background=ORANGE,
+        foreground="#1a1206",
+    )
+    style.map(
+        "Go.TButton",
+        background=[("disabled", "#6b5a3a"), ("pressed", ORANGE_DARK), ("active", "#ffb84d")],
+        foreground=[("disabled", "#2c2617")],
+    )
+    style.configure(
+        "TEntry",
+        font=body,
+        padding=6,
+        fieldbackground=FIELD,
+        foreground=TEXT,
+        bordercolor=LINE,
+        insertcolor=TEXT,
+    )
+    style.configure("TCheckbutton", font=body, background=BG, foreground=TEXT, padding=(2, 4))
+    style.map(
+        "TCheckbutton",
+        background=[("active", BG)],
+        foreground=[("active", "#ffffff")],
+    )
+    style.configure("TNotebook", background=BG, bordercolor=LINE)
+    style.configure("TNotebook.Tab", font=body, padding=(16, 10), background=PANEL, foreground=MUTED)
+    style.map(
+        "TNotebook.Tab",
+        background=[("selected", "#2a3644")],
+        foreground=[("selected", "#ffffff")],
+    )
+    style.configure("TSeparator", background=LINE)
+    style.configure("TProgressbar", background=ORANGE, troughcolor=FIELD, bordercolor=LINE)
+    style.configure("Title.TLabel", font=("Microsoft YaHei UI", 26, "bold"), foreground="#ffffff")
+    style.configure("Accent.TLabel", font=("Microsoft YaHei UI", 13, "bold"), foreground=ORANGE)
+    style.configure("Sub.TLabel", font=body, foreground=MUTED)
+    style.configure("Field.TLabel", font=body, foreground="#c9d6e2")
+    style.configure("Hint.TLabel", font=("Microsoft YaHei UI", 11), foreground=MUTED)
+    style.configure("Live.TLabel", font=("Microsoft YaHei UI", 12, "bold"), foreground=ORANGE)
 
 
 def _dpi_aware() -> None:
@@ -164,6 +222,7 @@ class DemoWatchPanel(ttk.Frame):
     def _open_gotv_dialog(self) -> None:
         win = Toplevel(self)
         win.title("GOTV 配置（高级）")
+        win.configure(bg=BG)
         win.transient(self.winfo_toplevel())
         win.grab_set()
         win.geometry("640x300")
@@ -482,9 +541,9 @@ class DemoPanel(ttk.Frame):
         ttk.Label(
             self,
             text=(
-                "精确层：K/D/A、ADR、KAST 以 demo.stats 为准，生成前逐项对照 fixture；"
-                "任何差异都会停止生成。Kill Matrix 来自逐条击杀事件；"
-                "Open Kills 为参考字段；Rating / Swing 为近似值。"
+                "精确层：K/D/A、ADR、K (HS) 来自 demoparser2 计分板属性，生成前逐项对照 fixture；"
+                "任何差异都会停止生成。KAST 为推断，Open Kills 为参考字段；"
+                "Kill Matrix 只覆盖逐回合核对一致的回合；Rating / Swing 为近似值。"
             ),
             style="Hint.TLabel",
             wraplength=760,
@@ -606,8 +665,8 @@ class AppWindow:
     def __init__(self) -> None:
         self.root = Tk()
         self.root.title(f"{APP_NAME} {APP_VERSION}")
-        self.root.geometry("1000x780")
-        self.root.minsize(900, 720)
+        self.root.geometry("1040x820")
+        self.root.minsize(940, 760)
         _set_theme(self.root)
         _dpi_aware()
         self._build()

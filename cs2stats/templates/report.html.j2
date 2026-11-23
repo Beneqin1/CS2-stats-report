@@ -23,6 +23,11 @@
   }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
+  body::before {
+    content: ""; position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
+    background: linear-gradient(90deg, #ff9d3c, #ffd24a 45%, #98ffff 100%);
+    box-shadow: 0 1px 14px rgba(255, 157, 60, .55);
+  }
   body {
     margin: 0;
     min-height: 100vh;
@@ -34,29 +39,50 @@
     font-size: 15px;
     -webkit-font-smoothing: antialiased;
   }
-  .page { max-width: 1800px; margin: 0 auto; padding: 28px 32px 48px; }
+  .page { max-width: 1800px; margin: 0 auto; padding: 34px 32px 48px; }
   .hero {
     display: flex; justify-content: space-between; align-items: flex-end; gap: 28px;
-    padding-bottom: 20px; border-bottom: 1px solid var(--line);
+    padding: 6px 4px 26px; border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(680px 220px at 8% 0%, rgba(255, 157, 60, .12), transparent 70%),
+      radial-gradient(560px 200px at 96% 100%, rgba(152, 255, 255, .07), transparent 70%);
   }
-  .eyebrow { font-size: 10px; letter-spacing: .22em; color: #8db2c8; font-weight: 700; }
-  h1 { margin: 8px 0 10px; font-size: 46px; line-height: 1.02; font-weight: 800; letter-spacing: -.02em; }
-  h1 .map-sub { color: var(--muted); font-size: 16px; font-weight: 400; letter-spacing: 0; margin-left: 12px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 11px; letter-spacing: .26em; color: #ffb45e; font-weight: 800;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 3px; background: linear-gradient(90deg, #ff9d3c, #ffd24a); border-radius: 2px; box-shadow: 0 0 8px rgba(255,157,60,.6); }
+  h1 { margin: 12px 0 12px; font-size: 68px; line-height: .98; font-weight: 800; letter-spacing: -.025em; text-transform: uppercase; }
+  h1 .map {
+    background: linear-gradient(92deg, #ffffff 8%, #ffe9b8 42%, #ffb45e 78%, #ff8f2d 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 3px 16px rgba(255, 157, 60, .28));
+  }
+  h1 .map-sub {
+    color: var(--muted); font-size: 17px; font-weight: 500; letter-spacing: .12em;
+    margin-left: 16px; text-transform: none; -webkit-text-fill-color: var(--muted);
+  }
   .meta { color: var(--muted); font-size: 12px; line-height: 1.7; }
   .meta code { color: #c8d6e3; font-family: Consolas, "Courier New", monospace; font-size: 11px; }
-  .scoreboard { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
-  .score-team { min-width: 190px; text-align: center; }
-  .score-team .team-name { color: var(--muted); font-size: 13px; font-weight: 600; }
-  .score-team .team-score { color: var(--team); font-size: 64px; line-height: .95; font-weight: 800; margin: 6px 0 2px; }
-  .score-team .team-sub { color: var(--muted); font-size: 11px; letter-spacing: .03em; }
-  .score-colon { color: #6e8294; font-size: 38px; font-weight: 300; }
-  .mvp-card {
-    min-width: 190px; padding: 12px 16px; border: 1px solid rgba(255,210,74,.62);
-    border-radius: 9px; background: linear-gradient(180deg, rgba(255,210,74,.16), rgba(255,210,74,.05));
-    box-shadow: 0 0 18px rgba(255,210,74,.10);
+  .scoreboard {
+    display: flex; align-items: center; gap: 22px; flex-shrink: 0;
+    padding: 16px 26px; border: 1px solid var(--line); border-radius: 14px;
+    background: linear-gradient(180deg, rgba(38, 49, 60, .72), rgba(22, 28, 35, .72));
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .05);
   }
-  .mvp-card .badge { display: inline-block; color: #16130b; background: var(--gold); border-radius: 3px; padding: 1px 6px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-  .mvp-card .name { margin-top: 7px; color: #fff4cf; font-size: 17px; font-weight: 750; white-space: nowrap; }
+  .score-team { min-width: 150px; text-align: center; }
+  .score-team .team-name { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+  .score-team .team-score { color: var(--team); font-size: 84px; line-height: .92; font-weight: 800; margin: 8px 0 4px; text-shadow: 0 4px 22px rgba(0, 0, 0, .5); }
+  .score-team.winner .team-score { filter: drop-shadow(0 0 18px var(--team)); }
+  .score-team .team-sub { color: var(--muted); font-size: 11px; letter-spacing: .03em; }
+  .score-colon { color: #6e8294; font-size: 46px; font-weight: 300; padding-bottom: 14px; }
+  .mvp-card {
+    min-width: 190px; padding: 14px 18px; border: 1px solid rgba(255,210,74,.62);
+    border-radius: 10px; background: linear-gradient(180deg, rgba(255,210,74,.18), rgba(255,210,74,.05));
+    box-shadow: 0 0 26px rgba(255,210,74,.16), inset 0 1px 0 rgba(255, 234, 176, .18);
+  }
+  .mvp-card .badge { display: inline-block; color: #16130b; background: linear-gradient(90deg, #ffd24a, #ffb45e); border-radius: 3px; padding: 2px 8px; font-size: 10px; font-weight: 800; letter-spacing: .12em; box-shadow: 0 0 10px rgba(255, 210, 74, .5); }
+  .mvp-card .name { margin-top: 8px; color: #fff4cf; font-size: 19px; font-weight: 750; white-space: nowrap; }
   .mvp-card .rating { margin-top: 3px; color: var(--gold); font-size: 12px; font-weight: 650; }
   .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 16px; }
   .card {
@@ -193,6 +219,7 @@
   }
   .matrix-table th.corner { text-align: left; color: #8ea3b5; font-weight: 500; background: transparent; font-size: 10px; }
   .matrix-table th.row-head { text-align: left; min-width: 165px; }
+  .matrix-table th.world-head { color: #8ea3b5; font-style: italic; background: rgba(142,163,181,.12); }
   .matrix-table th .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
   .matrix-table td { padding: 0; }
   .matrix-cell { display: flex; gap: 3px; justify-content: center; }
@@ -265,7 +292,7 @@
     .player-grid { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 720px) {
-    h1 { font-size: 27px; }
+    h1 { font-size: 34px; }
     .score-team { min-width: 120px; }
     .score-team .team-score { font-size: 34px; }
     .cards { grid-template-columns: 1fr; }
@@ -290,8 +317,10 @@
       </div>
     </div>
     <div class="scoreboard">
+      {% set scores = report.summary.teams|map(attribute='score')|list %}
+      {% set top_score = scores|max %}
       {% for team in report.summary.teams %}
-      <div class="score-team" style="--team: {{ team.color }}">
+      <div class="score-team{{ ' winner' if team.score == top_score and scores.count(top_score) == 1 else '' }}" style="--team: {{ team.color }}">
         <div class="team-name">{{ team.name }}</div>
         <div class="team-score">{{ team.score }}</div>
       </div>
@@ -362,6 +391,22 @@
   </div>
   {% endif %}
 
+  {% if report.meta.warnings %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ 解析提示（{{ report.meta.warnings|length }} 条）</strong>
+      <details>
+        <summary>展开查看</summary>
+        <div>
+          {% for warning in report.meta.warnings %}
+            {{ warning }}<br>
+          {% endfor %}
+        </div>
+      </details>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="controls">
     <span class="control-label">视图</span>
     <div class="segmented" id="side-toggle">
@@ -405,19 +450,59 @@
     <div class="perf-chart" id="perf-chart"></div>
   </section>
 
-  {% if report.matrix.available %}
+  <section class="panel table-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Rating 分解<span class="ref-tag">近似</span></h2>
+        <p class="panel-sub">
+          Rating ≈ 0.0073×KAST + 0.3591×KPR − 0.5329×DPR + 0.2372×Impact + 0.0032×ADR + 0.1587（KAST 用百分数代入；近似公式，非 HLTV 官方）。<br>
+          Impact = 2.13×KPR + 0.42×APR − 0.41 + 0.50×首杀/回合 + 0.30×多杀回合/回合；Swing 与经济修正单独列出，不并入 Rating。
+        </p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>KPR</th>
+            <th>DPR</th>
+            <th>APR</th>
+            <th>ADR</th>
+            <th>KAST<span class="ref-tag">推断</span></th>
+            <th>Impact</th>
+            <th>Swing<span class="ref-tag">近似</span></th>
+            <th>Econ Δ<span class="ref-tag">近似</span></th>
+            <th>Rating ≈</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="panel matrix-panel">
     <div class="panel-head">
-      <div><h2>Kill matrix</h2></div>
-      <div class="segmented" id="matrix-scope">
-        {% for scope in report.matrix.scopes %}
-        <button type="button" data-scope="{{ scope.key }}" class="{{ 'active' if loop.first else '' }}">{{ scope.label }}</button>
-        {% endfor %}
+      <div>
+        <h2>Kill matrix</h2>
+        <p class="panel-sub">{{ report.matrix.note }}</p>
       </div>
+      {% if report.matrix.available %}
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="segmented" id="matrix-view">
+          <button type="button" data-view="kills" class="active">击杀视角</button>
+          <button type="button" data-view="deaths">死亡视角</button>
+        </div>
+        <div class="segmented" id="matrix-scope">
+          {% for scope in report.matrix.scopes %}
+          <button type="button" data-scope="{{ scope.key }}" class="{{ 'active' if loop.first else '' }}">{{ scope.label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     </div>
     <div class="matrix-wrap" id="matrix-wrap"></div>
   </section>
-  {% endif %}
 
   <section class="player-section">
     <div class="panel-head">
@@ -464,10 +549,14 @@
     <strong>口径说明</strong>
     <ul>
       <li><b>精确层</b>：Kills / Deaths / Assists / ADR / K (HS) 来自 demo 计分板属性；其中 K/D/A/ADR 已用同一场计分板截图 fixture 逐项校验，K (HS) 因截图只显示爆头百分比而未逐项校验。</li>
-      <li><b>KAST（推断）</b>：由计分板每回合 K/A/S 推断，<b>不含 traded</b>；截图没有 KAST 列，未与计分板逐项校验。</li>
-      <li><b>事件精确层</b>：Kill Matrix 从 player_death 逐条聚合，受正式回合过滤影响；本场 bot 接管导致事件归因与计分板不一致，因此隐藏，不显示错误矩阵。</li>
+      <li><b>KAST（推断）</b>：由计分板每回合 K/A/S 推断，traded 回合仅计入事件归因逐回合核对一致的回合；截图没有 KAST 列，未与计分板逐项校验。</li>
+      {% if report.matrix.available %}
+      <li><b>事件层（逐回合核对）</b>：Kill Matrix 从 player_death 逐条聚合，只覆盖事件归因与计分板每回合 K/D 差分完全一致的回合（{{ report.matrix.coverage.covered }}/{{ report.matrix.coverage.total }}{% if report.matrix.coverage.excluded_rounds %}，排除回合：{{ report.matrix.coverage.excluded_rounds|join('、') }}{% endif %}）；环境/自杀死亡归入“环境”行/列，队内击杀不显示。</li>
+      {% else %}
+      <li><b>事件层</b>：{{ report.matrix.note or '本场事件归因无法与计分板属性核对一致，Kill Matrix 已隐藏，不显示可能错误的数据。' }}</li>
+      {% endif %}
       <li><b>参考层</b>：Open Kills 由计分板 kills_total 的每回合首次增量推断，标“参考”，不参与 fixture 精确层判定。</li>
-      <li><b>近似层</b>：Rating、Swing、MVP；Swing 在事件层可靠时用事件级近似，本场事件层不可靠，改用计分板每回合 K/A/D 的回合级近似；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
+      <li><b>近似层</b>：Rating、Swing、MVP；Rating 用公开流传的 Rating 2.0 近似公式（分项见“Rating 分解”表），Swing 在事件层可靠时用事件级近似，事件层不可靠时改用计分板每回合 K/A/D 的回合级近似；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
       <li><b>All / T / CT</b>：All = T + CT；T/CT 分面来自计分板每回合差值。</li>
     </ul>
   </div>
@@ -490,7 +579,7 @@
   "use strict";
 
   const DATA = JSON.parse(document.getElementById("report-data").textContent);
-  const state = { side: "ALL", matrixScope: "all" };
+  const state = { side: "ALL", matrixScope: "all", matrixView: "kills" };
   const SIDE_LABEL = { ALL: "全场", T: "T 方", CT: "CT 方" };
   const RADAR_ZH = { kpr: "每回合击杀", rating: "评分", impact: "影响力", adr: "回合伤害", kast: "不白给率", survival: "存活率" };
   const bySid = new Map(DATA.players.map((p) => [p.steamid, p]));
@@ -547,9 +636,9 @@
     return value >= 1 ? "rating-hi" : "rating-lo";
   }
 
-  function teamRow(team) {
+  function teamRow(team, colspan) {
     const scope = state.side === "ALL" ? "全场" : SIDE_LABEL[state.side];
-    return '<tr class="team-row"><td colspan="13">' +
+    return '<tr class="team-row"><td colspan="' + (colspan || 13) + '">' +
       '<div class="team-chip" style="--team:' + team.color + '">' +
         '<span class="team-bar"></span>' +
         '<span>' + esc(team.name) + '</span>' +
@@ -610,6 +699,51 @@
       );
     }
     body.innerHTML = rows.join("") || '<tr><td colspan="12" class="empty">没有可显示的选手数据。</td></tr>';
+  }
+
+  function renderBreakdown() {
+    const body = $("#breakdown-body");
+    if (!body) return;
+    const order = DATA.table_order[state.side] || [];
+    const rows = [];
+    let lastTeam = null;
+    for (const sid of order) {
+      const player = bySid.get(sid);
+      if (!player) continue;
+      if (player.team !== lastTeam) {
+        if (lastTeam !== null) {
+          rows.push('<tr class="team-divider"><td colspan="10"></td></tr>');
+        }
+        rows.push(teamRow(teamByKey.get(player.team), 10));
+        lastTeam = player.team;
+      }
+      const m = player.metrics[state.side];
+      const blank = '<span class="muted">—</span>';
+      const cell = (content) => !m.available ? blank : content;
+      const target = targetName && player.name === targetName;
+      const support = player.field_support && player.field_support[state.side]
+        ? new Set(player.field_support[state.side]) : null;
+      const kastCell = support && !support.has("kast") ? blank : cell(pct(m.kast, 1));
+      rows.push(
+        '<tr class="' + (target ? "is-target" : "") + '">' +
+          '<td class="player"><div class="player-cell" style="--team:' + player.color + '">' +
+            '<span class="team-bar"></span>' +
+            '<span class="player-name">' + esc(player.name) + '</span>' +
+            (target ? '<span class="target-star">★</span>' : '') +
+          '</div></td>' +
+          statCell(cell(fixed(m.kpr, 2))) +
+          statCell(cell(fixed(m.dpr, 2))) +
+          statCell(cell(fixed(m.apr, 2))) +
+          statCell(cell(adrFixed(m.adr))) +
+          statCell(kastCell) +
+          statCell(cell(fixed(m.impact, 2))) +
+          statCell(cell('<span class="num ' + (m.swing_pct > 0 ? "pos" : (m.swing_pct < 0 ? "neg" : "")) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
+          statCell(cell('<span class="num ' + (m.econ_delta > 0 ? "pos" : (m.econ_delta < 0 ? "neg" : "")) + '">' + signed(m.econ_delta, 3) + '</span>')) +
+          statCell(cell('<span class="' + ratingClass(m.rating) + '">' + fixed(m.rating, 2) + '</span>')) +
+        '</tr>'
+      );
+    }
+    body.innerHTML = rows.join("") || '<tr><td colspan="10" class="empty">没有可显示的选手数据。</td></tr>';
   }
 
   function perfColor(rating) {
@@ -675,6 +809,13 @@
       '</div>';
   }
 
+  function hexToRgba(hex, alpha) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ""));
+    if (!m) return "rgba(150,163,175," + alpha + ")";
+    const n = parseInt(m[1], 16);
+    return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + alpha.toFixed(3) + ")";
+  }
+
   function renderMatrix() {
     const host = $("#matrix-wrap");
     if (!host) return;
@@ -687,35 +828,91 @@
       host.innerHTML = '<div class="empty">没有可显示的 Kill Matrix 数据。</div>';
       return;
     }
-    const scope = state.matrixScope;
-    const grid = matrix.cells[scope] && matrix.cells[scope][state.side];
+    const scope = matrix.cells[state.matrixScope] ? state.matrixScope : "all";
+    let grid = matrix.cells[scope] && matrix.cells[scope][state.side];
     if (!grid) {
       host.innerHTML = '<div class="empty">没有该视图的 Kill Matrix 数据。</div>';
       return;
     }
-    const head = ['<table class="matrix-table"><thead><tr><th class="corner">击杀者 ↓ / 被击杀者 →</th>'];
-    for (const col of matrix.cols) {
-      head.push('<th><span class="dot" style="background:' + col.color + '"></span>' + esc(col.name) + '</th>');
-    }
-    head.push('</tr></thead><tbody>');
-    for (let r = 0; r < matrix.rows.length; r++) {
-      const row = matrix.rows[r];
-      const cells = [('<tr><th class="row-head"><span class="dot" style="background:' + row.color + '"></span>' + esc(row.name) + '</th>')];
+    const worldScope = matrix.world && matrix.world[scope] ? matrix.world[scope] : null;
+    let worldSide = worldScope ? worldScope[state.side] : null;
+    let rows = matrix.rows;
+    let cols = matrix.cols;
+    let worldRow = worldSide ? worldSide.row || [] : [];
+    let worldCol = worldSide ? worldSide.col || [] : [];
+    let corner = "击杀者 ↓ / 被击杀者 →";
+    if (state.matrixView === "deaths") {
+      const transposed = [];
       for (let c = 0; c < matrix.cols.length; c++) {
-        const col = matrix.cols[c];
-        const cell = grid[r][c] || { f: 0, r: 0 };
-        cells.push(
+        const line = [];
+        for (let r = 0; r < matrix.rows.length; r++) {
+          const cell = (grid[r] && grid[r][c]) || { f: 0, r: 0 };
+          line.push({ f: cell.r || 0, r: cell.f || 0 });
+        }
+        transposed.push(line);
+      }
+      grid = transposed;
+      rows = matrix.cols;
+      cols = matrix.rows;
+      const tmp = worldRow;
+      worldRow = worldCol;
+      worldCol = tmp;
+      corner = "被击杀者 ↓ / 击杀者 →";
+    }
+    let maxV = 0;
+    for (const line of grid) {
+      for (const cell of line) {
+        maxV = Math.max(maxV, cell.f || 0, cell.r || 0);
+      }
+    }
+    const pill = (value, color) => {
+      if (!value) return '<span class="pill zero">0</span>';
+      const alpha = maxV > 0 ? 0.30 + 0.70 * (value / maxV) : 0.55;
+      return '<span class="pill" style="background:' + hexToRgba(color, alpha) + '">' + value + '</span>';
+    };
+    const hasWorld = worldRow.some((v) => v > 0) || worldCol.some((v) => v > 0);
+    const out = ['<table class="matrix-table"><thead><tr><th class="corner">' + corner + '</th>'];
+    for (const col of cols) {
+      out.push('<th><span class="dot" style="background:' + col.color + '"></span>' + esc(col.name) + '</th>');
+    }
+    if (hasWorld) out.push('<th class="world-head">环境</th>');
+    out.push('</tr></thead><tbody>');
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      out.push('<tr><th class="row-head"><span class="dot" style="background:' + row.color + '"></span>' + esc(row.name) + '</th>');
+      for (let c = 0; c < cols.length; c++) {
+        const col = cols[c];
+        const cell = (grid[r] && grid[r][c]) || { f: 0, r: 0 };
+        out.push(
           '<td><div class="matrix-cell">' +
-            '<span class="pill ' + (cell.f ? "" : "zero") + '" style="--c:' + row.color + '">' + (cell.f || 0) + '</span>' +
-            '<span class="pill ' + (cell.r ? "" : "zero") + '" style="--c:' + col.color + '">' + (cell.r || 0) + '</span>' +
+            pill(cell.f || 0, row.color) +
+            pill(cell.r || 0, col.color) +
           '</div></td>'
         );
       }
-      cells.push('</tr>');
-      head.push(cells.join(""));
+      if (hasWorld) {
+        out.push('<td><div class="matrix-cell">' + pill(worldCol[r] || 0, "#8ea3b5") + '</div></td>');
+      }
+      out.push('</tr>');
     }
-    head.push('</tbody></table>');
-    host.innerHTML = head.join("");
+    if (hasWorld) {
+      out.push('<tr><th class="row-head world-head">环境</th>');
+      for (let c = 0; c < cols.length; c++) {
+        out.push('<td><div class="matrix-cell">' + pill(worldRow[c] || 0, "#8ea3b5") + '</div></td>');
+      }
+      out.push('<td></td></tr>');
+    }
+    out.push('</tbody></table>');
+    out.push(
+      '<div class="matrix-note">' +
+        '<span><b>读法</b>：每格左数 = 行→列，右数 = 列→行；颜色越深次数越多。</span>' +
+        (matrix.coverage && matrix.coverage.total
+          ? '<span><b>覆盖</b>：' + matrix.coverage.covered + '/' + matrix.coverage.total + ' 回合通过逐回合核对。</span>'
+          : '') +
+        (hasWorld ? '<span><b>环境</b>：世界/自杀等无击杀者的死亡。</span>' : '') +
+      '</div>'
+    );
+    host.innerHTML = out.join("");
   }
 
   function renderRadar() {
@@ -838,6 +1035,7 @@
 
   function renderAll() {
     renderStats();
+    renderBreakdown();
     renderPerformance();
     renderMatrix();
     renderRadar();
@@ -855,6 +1053,16 @@
     button.addEventListener("click", () => {
       state.side = button.dataset.side || "ALL";
       renderAll();
+    });
+  });
+
+  document.querySelectorAll("#matrix-view button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.matrixView = button.dataset.view || "kills";
+      renderMatrix();
+      document.querySelectorAll("#matrix-view button").forEach((item) => {
+        item.classList.toggle("active", item.dataset.view === state.matrixView);
+      });
     });
   });
 

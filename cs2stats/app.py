@@ -63,6 +63,8 @@ def process_demo(
 
     notify("parse", f"正在解析 {demo_path.name}……")
     demo = load_demo(demo_path)
+    if getattr(demo, "from_cache", False):
+        notify("parse", "使用缓存的解析结果（demo 未改动，跳过重复解析）。")
     notify("parse", f"解析完成：{demo.map_name}，{len(demo.counted_rounds)} 个正式回合，{len(demo.players)} 名选手。")
 
     notify("validate", "正在用计分板 fixture 校验精确字段……")
