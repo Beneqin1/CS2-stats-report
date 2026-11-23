@@ -78,7 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--require-fixture",
         action="store_true",
-        help="自动监听模式也要求计分板 fixture；默认没有 fixture 时生成带“未校验”横幅的报告",
+        help="手动 Demo 或自动监听都要求计分板 fixture；默认没有 fixture 时生成带“未校验”横幅的报告",
     )
     parser.add_argument(
         "--gsi",
@@ -152,6 +152,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             out_path=args.out,
             target=args.target,
             fixture_path=args.fixture,
+            allow_missing_fixture=not args.require_fixture,
             allow_unvalidated_preview=args.allow_unvalidated_preview,
             progress=progress,
         )

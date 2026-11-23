@@ -8,7 +8,7 @@ approximation and is labelled as such in the report.
 from __future__ import annotations
 
 APP_NAME = "CS2 Stats Report"
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.1"
 TARGET_DEFAULT = "Beneqin1"
 
 SIDE_T = "T"

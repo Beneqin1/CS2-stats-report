@@ -11,7 +11,7 @@ import traceback
 import webbrowser
 from pathlib import Path
 from tkinter import BooleanVar, StringVar, Tk, Toplevel, filedialog, messagebox, ttk
-from tkinter import END, N, S, E, W
+from tkinter import END, N, S, E, W, LEFT
 
 from .app import describe_failure, process_demo
 from .config import APP_NAME, APP_VERSION, TARGET_DEFAULT
@@ -37,14 +37,14 @@ from .validation import ValidationError, ValidationFailed
 LOGGER = logging.getLogger(__name__)
 
 
-BG = "#151a20"
-PANEL = "#1f2731"
-FIELD = "#10151b"
-TEXT = "#e8eef4"
-MUTED = "#93a5b5"
-ORANGE = "#ffa028"
-ORANGE_DARK = "#cc7a00"
-LINE = "#31404f"
+BG = "#f7f8fa"
+PANEL = "#ffffff"
+FIELD = "#ffffff"
+TEXT = "#1f2329"
+MUTED = "#6b7280"
+ORANGE = "#f76b15"
+ORANGE_DARK = "#c2410c"
+LINE = "#e3e6ea"
 
 
 def _set_theme(root: Tk) -> None:
@@ -71,20 +71,20 @@ def _set_theme(root: Tk) -> None:
     )
     style.map(
         "TButton",
-        background=[("disabled", "#1a2129"), ("pressed", ORANGE_DARK), ("active", "#2a3644")],
-        foreground=[("disabled", "#5c6b7a")],
+        background=[("disabled", "#eceef1"), ("pressed", ORANGE_DARK), ("active", "#eef1f4")],
+        foreground=[("disabled", "#9aa3ad")],
     )
     style.configure(
         "Go.TButton",
         font=("Microsoft YaHei UI", 15, "bold"),
         padding=(18, 11),
         background=ORANGE,
-        foreground="#1a1206",
+        foreground="#ffffff",
     )
     style.map(
         "Go.TButton",
-        background=[("disabled", "#6b5a3a"), ("pressed", ORANGE_DARK), ("active", "#ffb84d")],
-        foreground=[("disabled", "#2c2617")],
+        background=[("disabled", "#f9c9a8"), ("pressed", ORANGE_DARK), ("active", "#ff8a47")],
+        foreground=[("disabled", "#ffffff")],
     )
     style.configure(
         "TEntry",
@@ -99,23 +99,23 @@ def _set_theme(root: Tk) -> None:
     style.map(
         "TCheckbutton",
         background=[("active", BG)],
-        foreground=[("active", "#ffffff")],
+        foreground=[("active", "#111418")],
     )
     style.configure("TNotebook", background=BG, bordercolor=LINE)
-    style.configure("TNotebook.Tab", font=body, padding=(16, 10), background=PANEL, foreground=MUTED)
+    style.configure("TNotebook.Tab", font=body, padding=(16, 10), background="#eceef1", foreground=MUTED)
     style.map(
         "TNotebook.Tab",
-        background=[("selected", "#2a3644")],
-        foreground=[("selected", "#ffffff")],
+        background=[("selected", PANEL)],
+        foreground=[("selected", TEXT)],
     )
     style.configure("TSeparator", background=LINE)
-    style.configure("TProgressbar", background=ORANGE, troughcolor=FIELD, bordercolor=LINE)
-    style.configure("Title.TLabel", font=("Microsoft YaHei UI", 26, "bold"), foreground="#ffffff")
-    style.configure("Accent.TLabel", font=("Microsoft YaHei UI", 13, "bold"), foreground=ORANGE)
+    style.configure("TProgressbar", background=ORANGE, troughcolor="#eceef1", bordercolor=LINE)
+    style.configure("Title.TLabel", font=("Microsoft YaHei UI", 26, "bold"), foreground=TEXT)
+    style.configure("Accent.TLabel", font=("Microsoft YaHei UI", 13, "bold"), foreground=ORANGE_DARK)
     style.configure("Sub.TLabel", font=body, foreground=MUTED)
-    style.configure("Field.TLabel", font=body, foreground="#c9d6e2")
+    style.configure("Field.TLabel", font=body, foreground="#374151")
     style.configure("Hint.TLabel", font=("Microsoft YaHei UI", 11), foreground=MUTED)
-    style.configure("Live.TLabel", font=("Microsoft YaHei UI", 12, "bold"), foreground=ORANGE)
+    style.configure("Live.TLabel", font=("Microsoft YaHei UI", 12, "bold"), foreground=ORANGE_DARK)
 
 
 def _dpi_aware() -> None:
@@ -515,8 +515,10 @@ class DemoPanel(ttk.Frame):
         ttk.Button(self, text="浏览…", command=self._choose_fixture).grid(row=5, column=2, sticky=E, pady=4)
         ttk.Label(
             self,
-            text="留空则按 demo 的 SHA-256 在 fixtures/ 中自动查找；严格模式要求校验通过。",
+            text="留空则按 demo 的 SHA-256 在 fixtures/ 中自动查找；没有 fixture 也会生成报告并标注“未校验”，找到但不一致会停止生成。",
             style="Hint.TLabel",
+            wraplength=820,
+            justify=LEFT,
         ).grid(row=6, column=1, columnspan=2, sticky=W, padx=(12, 0))
 
         ttk.Label(self, text="报告输出目录（固定）", style="Field.TLabel").grid(row=7, column=0, sticky=W, pady=4)
@@ -541,9 +543,9 @@ class DemoPanel(ttk.Frame):
         ttk.Label(
             self,
             text=(
-                "精确层：K/D/A、ADR、K (HS) 来自 demoparser2 计分板属性，生成前逐项对照 fixture；"
-                "任何差异都会停止生成。KAST 为推断，Open Kills 为参考字段；"
-                "Kill Matrix 只覆盖逐回合核对一致的回合；Rating / Swing 为近似值。"
+                "精确层：K/D/A、ADR、K (HS) 来自 demoparser2 计分板属性，生成前会对照 fixture（如果找到）；"
+                "找出差异会停止生成，没有 fixture 则生成标“未校验”的报告。KAST 为推断，"
+                "Open Kills 为参考字段；Kill Matrix 只覆盖逐回合核对一致的回合；Rating / Swing 为近似值。"
             ),
             style="Hint.TLabel",
             wraplength=760,
@@ -593,6 +595,7 @@ class DemoPanel(ttk.Frame):
                     out_dir=self.out_var.get().strip() or None,
                     target=target,
                     fixture_path=fixture,
+                    allow_missing_fixture=True,
                     progress=lambda stage, message: self.queue.put(("progress", message)),
                 )
                 self.queue.put(("done", result))
@@ -642,10 +645,18 @@ class DemoPanel(ttk.Frame):
                 webbrowser.open(result.report_path.resolve().as_uri())
             except Exception:
                 LOGGER.warning("could not open browser", exc_info=True)
-        messagebox.showinfo(
-            "报告已生成",
-            f"报告已生成：\n{result.report_path}\n\n校验状态：{result.validation.status}",
-        )
+        if getattr(result.validation, "status", "") == "verified":
+            messagebox.showinfo(
+                "报告已生成",
+                f"报告已生成：\n{result.report_path}\n\n校验状态：已校验",
+            )
+        else:
+            messagebox.showwarning(
+                "报告已生成（未校验）",
+                f"报告已生成：\n{result.report_path}\n\n"
+                "没有找到可用的计分板 fixture，报告顶部已标注“未校验”；\n"
+                "K/D/A/ADR 仍按计分板属性读取，但没有与本场截图逐项核对。",
+            )
 
     def _finish_validation_failed(self, result) -> None:
         self._stop_progress()

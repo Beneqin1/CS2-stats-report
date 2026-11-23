@@ -962,7 +962,7 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
                 round_index,
                 {"A": len(team_members["A"]), "B": len(team_members["B"])},
             )
-            live_start = rounds[round_index].live_start
+            live_start = rounds[round_index].freeze_end_tick or rounds[round_index].live_start
             entry: dict[str, Any] = {
                 "round_index": round_index,
                 "tick": _as_int(kill.get("tick")),

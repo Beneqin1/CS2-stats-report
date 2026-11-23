@@ -128,9 +128,9 @@ demo 里的每一名选手都必须出现在 fixture 中，不能只填自己。
 有差异：退出码 1，逐项列出「计分板 vs 解析」；不会生成 HTML。
 fixture 缺字段：退出码 1，显示 partial。
 
-自动监听 Demo 模式默认允许「暂时没有 fixture」：仍会生成报告，但顶部标
-“未校验”；fixture 存在但不一致时仍会停止生成。想强制要求 fixture，加
---require-fixture。
+手动 Demo 和自动监听 Demo 都默认允许「暂时没有 fixture」：仍会生成报告，
+但顶部标“未校验”；fixture 存在但不一致时仍会停止生成。想强制要求 fixture，
+加 --require-fixture。
 
 ------------------------------------------------
 6. 常见差异

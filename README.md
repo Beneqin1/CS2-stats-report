@@ -29,8 +29,8 @@ Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
 
 ## 快速开始（Windows）
 
-1. 下载 `CS2Stats-1.2.0-onedir.zip`，完整解压。
-2. 进入 `CS2Stats-1.2.0-onedir`，双击 `CS2Stats\CS2Stats.exe`。
+1. 下载 `CS2Stats-1.3.1-onedir.zip`，完整解压。
+2. 进入 `CS2Stats-1.3.1-onedir`，双击 `CS2Stats\CS2Stats.exe`。
 3. 第一次启动会自动生成 `stats.cfg`，并尝试复制到 CS2 的 `game\csgo\cfg`。
    - 旧版本生成的 `stat.cfg` / `stat_cs2stats.cfg` 会在确认是本程序生成的内容后自动清理。
    - 如果自动定位失败，程序会让你选择 `game\csgo\cfg` 目录。
@@ -62,7 +62,7 @@ Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
 
    并自动用默认浏览器打开。
 
-> onedir 版本中，`stats.cfg`、`settings.json`、`output\` 都在 `CS2Stats-1.2.0-onedir\` 根目录（exe 的上一级）。  
+> onedir 版本中，`stats.cfg`、`settings.json`、`output\` 都在 `CS2Stats-1.3.1-onedir\` 根目录（exe 的上一级）。  
 > onefile 版本则在 exe 同目录。
 
 ## 手动解析已有 demo
@@ -131,8 +131,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 默认构建 onedir：
 
 ```text
-package\CS2Stats-1.2.0-onedir\
-dist\CS2Stats-1.2.0-onedir.zip
+package\CS2Stats-1.3.1-onedir\
+dist\CS2Stats-1.3.1-onedir.zip
 ```
 
 ## 项目结构
@@ -159,7 +159,7 @@ docs/
 
 ## 开发者
 
-当前版本：**1.2.0**。变更见 [CHANGELOG.txt](CHANGELOG.txt)。
+当前版本：**1.3.1**。变更见 [CHANGELOG.txt](CHANGELOG.txt)。
 
 如果要在本项目基础上继续改进，建议先阅读 **[NEXT_MODEL_PROMPT.md](NEXT_MODEL_PROMPT.md)**：它记录了数据管线、不可破坏的约束、已知坑和验收命令。
 

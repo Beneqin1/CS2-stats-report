@@ -284,8 +284,13 @@ def _round_end_tick(round_item) -> int:
     return _int(getattr(round_item, "end_tick", 0) or getattr(round_item, "official_end_tick", 0))
 
 
-def _opening_counts(parser, parsed: ParsedDemo, formal_rounds) -> tuple[dict[int, int], dict[int, dict[str, int]], list[str]]:
-    """Infer round-opening kills from scoreboard kill deltas.
+def _opening_counts(
+    parser,
+    parsed: ParsedDemo,
+    formal_rounds,
+    prop: str = "kills_total",
+) -> tuple[dict[int, int], dict[int, dict[str, int]], list[str]]:
+    """Infer round-opening kills (or deaths) from scoreboard deltas.
 
     The event stream can misattribute both attacker and victim in bot-heavy
     demos, but the scoreboard kill counter is authoritative.  For each formal
@@ -293,16 +298,17 @@ def _opening_counts(parser, parsed: ParsedDemo, formal_rounds) -> tuple[dict[int
     A tie (two or more players at the same tick) is counted as ambiguous and
     skipped rather than guessed.
     """
+    label = "Open Kills" if prop == "kills_total" else "首死"
     warnings: list[str] = []
     counts: dict[int, int] = {}
     sides: dict[int, dict[str, int]] = {}
     try:
-        frame = parser.parse_ticks(["kills_total"])
+        frame = parser.parse_ticks([prop])
     except Exception as exc:
-        warnings.append(f"Open Kills 计分板差分不可用（{exc}）。")
+        warnings.append(f"{label} 计分板差分不可用（{exc}）。")
         return counts, sides, warnings
     if frame is None or frame.empty:
-        warnings.append("Open Kills 计分板差分为空。")
+        warnings.append(f"{label} 计分板差分为空。")
         return counts, sides, warnings
     frame = frame.sort_values(["steamid", "tick"])
     for round_item in formal_rounds:
@@ -316,8 +322,8 @@ def _opening_counts(parser, parsed: ParsedDemo, formal_rounds) -> tuple[dict[int
         candidates: list[tuple[int, int]] = []
         for sid, group in window.groupby("steamid"):
             group = group.sort_values("tick")
-            base = _int(group["kills_total"].iloc[0])
-            increased = group[group["kills_total"] > base]
+            base = _int(group[prop].iloc[0])
+            increased = group[group[prop] > base]
             if not increased.empty:
                 candidates.append((_int(increased["tick"].iloc[0]), _int(sid)))
         if not candidates:
@@ -326,8 +332,8 @@ def _opening_counts(parser, parsed: ParsedDemo, formal_rounds) -> tuple[dict[int
         winners = [sid for tick, sid in candidates if tick == first_tick]
         if len(winners) != 1:
             warnings.append(
-                f"第 {round_item.round_num} 回合有 {len(winners)} 名选手在同一 tick 取得首杀，"
-                "Open Kills 无法唯一归属，已跳过。"
+                f"第 {round_item.round_num} 回合有 {len(winners)} 名选手在同一 tick 出现{label}增量，"
+                "无法唯一归属，已跳过。"
             )
             continue
         sid = winners[0]
@@ -445,6 +451,10 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
 
     opening_counts, opening_sides, opening_warnings = _opening_counts(parser, parsed, formal_rounds)
     parsed.side_warnings.extend(opening_warnings)
+    opening_death_counts, opening_death_sides, opening_death_warnings = _opening_counts(
+        parser, parsed, formal_rounds, prop="deaths_total"
+    )
+    parsed.side_warnings.extend(opening_death_warnings)
 
     sb_kd, rounds_missing = _collect_scoreboard_deltas(parsed, formal_rounds, by_round)
     reliable_rounds, excluded_rounds = _reliable_rounds(parsed, formal_rounds, sb_kd, rounds_missing)
@@ -499,6 +509,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
         new_raw.assists = _int(final.get("assists_total"))
         new_raw.headshot_kills = _int(final.get("headshot_kills_total"))
         new_raw.opening_kills = opening_counts.get(player.steamid, 0)
+        new_raw.opening_deaths = opening_death_counts.get(player.steamid, 0)
         new_raw.damage = _float(final.get("damage_total"))
         # Keep the event-derived economy/swing weights for the approximate
         # Rating layer.  Exact K/D/A/ADR still come from the scoreboard; these
@@ -512,6 +523,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
         side = {SIDE_T: Counters(), SIDE_CT: Counters()}
         for side_key in (SIDE_T, SIDE_CT):
             side[side_key].opening_kills = opening_sides.get(player.steamid, {}).get(side_key, 0)
+            side[side_key].opening_deaths = opening_death_sides.get(player.steamid, {}).get(side_key, 0)
         kast_rounds = 0
         survived_rounds = 0
         multikill = {2: 0, 3: 0, 4: 0, 5: 0}
@@ -669,7 +681,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             "headshot_kills": new_raw.headshot_kills,
             "headshot_pct": (new_raw.headshot_kills * 100.0 / new_raw.kills) if new_raw.kills else 0.0,
             "opening_kills": new_raw.opening_kills,
-            "opening_deaths": old_exact.get("opening_deaths", 0),
+            "opening_deaths": new_raw.opening_deaths,
             "traded_deaths": old_exact.get("traded_deaths", 0),
             "multikill_2k": multikill[2],
             "multikill_3k": multikill[3],

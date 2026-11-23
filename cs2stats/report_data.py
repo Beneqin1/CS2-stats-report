@@ -18,6 +18,9 @@ from .config import (
     TARGET_DEFAULT,
 )
 from .demo_parser import ParsedDemo, Player
+from .coach import build_coach_report
+from .highlights import detect_highlights, goto_commands
+from .style_dna import build_style_dna
 from .rating import (
     Metrics,
     PlayerMetrics,
@@ -83,7 +86,7 @@ def _metrics_payload(metrics: Metrics) -> dict[str, Any]:
 _BASE_TABLE_FIELDS = (
     "kills", "deaths", "assists", "adr", "kast", "opening_kills",
     "headshot_kills", "flash_assists", "traded_deaths", "multikill_rounds",
-    "rating", "kdr", "plus_minus", "kd", "swing",
+    "mvps", "rating", "kdr", "plus_minus", "kd", "swing",
 )
 
 
@@ -518,6 +521,23 @@ def build_report(
     matrix_payload = _matrix_payload(demo, pms)
     matrix_available = bool(matrix_payload.get("available"))
 
+    highlights_payload = detect_highlights(demo)
+    demo_path = str(getattr(demo, "path", "") or "")
+    for card in highlights_payload.get("cards", []):
+        card["commands"] = goto_commands(demo_path, card["goto_tick"])
+
+    style_dna_payload = None
+    coach_payload = None
+    if target is not None:
+        style_dna_payload = build_style_dna(demo, target.player.steamid)
+        style_dna_payload["name"] = target.player.name
+        coach_payload = build_coach_report(
+            demo,
+            {side: target.for_side(side) for side in SIDE_KEYS},
+            demo.map_name[:1].upper() + demo.map_name[1:] if demo.map_name else demo.map_name,
+            target.player.steamid,
+        )
+
     target_payload = None
     if target:
         target_payload = {
@@ -551,6 +571,7 @@ def build_report(
             "scoreboard": scoreboard,
             "matrix_available": matrix_available,
             "warnings": warnings,
+            "data_quality": getattr(demo, "data_quality", {}) or {},
             "from_cache": bool(getattr(demo, "from_cache", False)),
         },
         "summary": summary,
@@ -563,4 +584,7 @@ def build_report(
         "radar": _radar_payload(demo, target, averages) if target else None,
         "compare": _compare_payload(demo, target, averages) if target else None,
         "matrix": matrix_payload,
+        "style_dna": style_dna_payload,
+        "coach": coach_payload,
+        "highlights": highlights_payload,
     }

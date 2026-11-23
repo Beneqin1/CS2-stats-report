@@ -106,6 +106,12 @@
   .banner code { color: #fff2d2; font-family: Consolas, monospace; font-size: 11px; }
   .banner details { margin-top: 6px; }
   .banner summary { cursor: pointer; color: #ffe6b8; }
+  .dq-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; font-size: 11px; }
+  .dq-label { color: var(--muted); letter-spacing: .08em; font-weight: 700; }
+  .dq-tag { border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; }
+  .dq-ok { color: #7dd9a8; border-color: rgba(93, 224, 137, .4); }
+  .dq-warn { color: #ffc978; border-color: rgba(255, 178, 74, .45); }
+  .dq-muted { color: var(--faint); }
   .controls {
     position: sticky; top: 0; z-index: 30;
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -230,6 +236,64 @@
   }
   .pill.zero { background: transparent; color: #5d6e7c; border: 1px solid rgba(255,255,255,.08); font-weight: 500; }
   .matrix-note { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; color: var(--faint); font-size: 10px; line-height: 1.6; }
+  .timeline-strip { display: flex; gap: 3px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .tl-cell { width: 26px; height: 16px; border-radius: 3px; background: #2a333d; border: 1px solid var(--line); cursor: default; }
+  .tl-cell.tl-t { background: rgba(255, 160, 40, .28); border-color: rgba(255, 160, 40, .5); }
+  .tl-cell.tl-ct { background: rgba(108, 178, 255, .22); border-color: rgba(108, 178, 255, .45); }
+  .tl-cell.tl-hl { box-shadow: 0 0 0 2px #ffd34d inset; }
+  .tl-cell.tl-unreliable { opacity: .45; }
+  .hl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .hl-card { border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; background: rgba(255,255,255,.02); }
+  .hl-top { display: flex; align-items: baseline; gap: 10px; }
+  .hl-round { font-size: 17px; font-weight: 800; color: #ffd34d; }
+  .hl-score { font-size: 13px; font-weight: 700; }
+  .hl-time { margin-left: auto; color: var(--faint); font-size: 11px; font-family: Consolas, monospace; }
+  .hl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .hl-tag { font-size: 10px; font-weight: 700; letter-spacing: .05em; border-radius: 4px; padding: 2px 7px; border: 1px solid var(--line); color: #ffd34d; border-color: rgba(255, 211, 77, .4); }
+  .hl-tag-eco { color: #7dd9a8; border-color: rgba(93, 224, 137, .4); }
+  .hl-tag-blitz { color: #6cb2ff; border-color: rgba(108, 178, 255, .4); }
+  .hl-tag-warn { color: var(--muted); border-color: var(--line); }
+  .hl-notes { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .hl-players { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; }
+  .hl-players b { color: #ffd34d; }
+  .hl-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .hl-copy { align-self: flex-start; background: rgba(255, 160, 40, .14); border: 1px solid rgba(255, 160, 40, .45); color: #ffc978; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .hl-copy:hover { background: rgba(255, 160, 40, .26); }
+  .hl-cmd { color: var(--faint); font-size: 10px; }
+  .hl-cmd code { font-family: Consolas, monospace; }
+  .tag-experimental { font-size: 10px; font-weight: 700; color: #6cb2ff; border: 1px solid rgba(108,178,255,.45); border-radius: 4px; padding: 1px 6px; vertical-align: middle; letter-spacing: .08em; }
+  .dna-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
+  #style-radar { width: 100%; height: 380px; }
+  .dna-side { display: flex; flex-direction: column; gap: 12px; }
+  .dna-archetype { display: flex; align-items: baseline; gap: 12px; }
+  .dna-label { color: var(--faint); font-size: 10px; letter-spacing: .12em; font-weight: 700; }
+  .dna-type { font-size: 22px; font-weight: 800; color: #ffd24a; }
+  .dna-summary { color: var(--muted); font-size: 13px; margin: 0; }
+  .dna-matches { display: flex; flex-direction: column; gap: 8px; }
+  .dna-match { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 10px; font-size: 12px; }
+  .dna-name { font-weight: 700; }
+  .dna-bar { height: 8px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
+  .dna-bar span { display: block; height: 100%; background: linear-gradient(90deg, #cc7a00, #ffd24a); border-radius: 4px; }
+  .dna-pct { text-align: right; color: #ffd24a; font-weight: 700; font-family: Consolas, monospace; }
+  .dna-raw { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--faint); font-size: 11px; line-height: 1.7; }
+  .dna-raw span { border-bottom: 1px dotted var(--line); cursor: help; }
+  @media (max-width: 980px) { .dna-grid { grid-template-columns: 1fr; } }
+  .coach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .coach-card { border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 13px 15px; background: rgba(255,255,255,.02); }
+  .coach-card.sev-high { border-left-color: #ff5d5d; }
+  .coach-card.sev-medium { border-left-color: #ffc978; }
+  .coach-card.sev-low { border-left-color: #6cb2ff; }
+  .coach-head { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+  .coach-sev { font-size: 10px; font-weight: 800; border-radius: 4px; padding: 2px 7px; letter-spacing: .06em; }
+  .sev-high .coach-sev { color: #ff8d8d; border: 1px solid rgba(255,93,93,.5); }
+  .sev-medium .coach-sev { color: #ffc978; border: 1px solid rgba(255,178,74,.5); }
+  .sev-low .coach-sev { color: #6cb2ff; border: 1px solid rgba(108,178,255,.5); }
+  .coach-title { font-size: 14px; font-weight: 800; }
+  .coach-body { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 0 0 7px; }
+  .coach-practice { color: #d8e2ec; font-size: 12px; line-height: 1.7; margin: 0 0 7px; }
+  .coach-practice b { color: #ffd24a; }
+  .coach-evidence summary { cursor: pointer; color: var(--faint); font-size: 11px; }
+  .coach-evidence code { display: block; margin-top: 6px; color: var(--faint); font-size: 10px; font-family: Consolas, monospace; word-break: break-all; }
   .matrix-note b { color: #c7d4df; font-weight: 600; }
   .target-head { display: flex; align-items: baseline; gap: 12px; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
   .target-head .name { color: #fff; font-size: 25px; font-weight: 800; letter-spacing: -.01em; }
@@ -407,6 +471,26 @@
   </div>
   {% endif %}
 
+  {% set dq = report.meta.data_quality or {} %}
+  {% if dq %}
+  <div class="dq-line">
+    <span class="dq-label">数据可信度</span>
+    {% if dq.takeover_detected %}
+    <span class="dq-tag dq-warn" title="检测到玩家接管 bot：接管时段的 {{ dq.bot_controlled_events }} 条事件已标记清洗，不计入事件层衍生统计">存在接管 · 已清洗 {{ dq.bot_controlled_events }} 条</span>
+    {% elif dq.check == 'ok' %}
+    <span class="dq-tag dq-ok" title="m_bControllingBot 全回合采样：未检测到玩家接管 bot">无接管</span>
+    {% else %}
+    <span class="dq-tag dq-muted" title="本 demo 的接管检测属性不可用，未做接管审计">接管检测不可用</span>
+    {% endif %}
+    {% if dq.matrix_total %}
+    <span class="dq-tag {{ 'dq-ok' if dq.matrix_covered == dq.matrix_total else 'dq-warn' }}" title="Kill Matrix 只统计事件归因与计分板逐回合核对一致的回合">矩阵核对 {{ dq.matrix_covered }}/{{ dq.matrix_total }}</span>
+    {% endif %}
+    {% if not dq.event_layer_reliable %}
+    <span class="dq-tag dq-warn" title="player_death 事件层与计分板属性存在不一致，相关字段已按降级口径标注">事件层已降级</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div class="controls">
     <span class="control-label">视图</span>
     <div class="segmented" id="side-toggle">
@@ -549,6 +633,121 @@
       </div>
     </div>
   </section>
+
+  {% if report.style_dna and report.style_dna.available %}
+  <section class="panel dna-panel" id="style-dna">
+    <div class="panel-head">
+      <div>
+        <h2>打法风格指纹 · Style DNA <span class="tag-experimental" title="特征向量与职业画像为近似/预设值，随真实 demo 校准迭代">实验</span></h2>
+        <p class="panel-sub">六维特征（侵略 / 存活 / 后段发力 / 道具 / 前期参与 / 游走），只使用逐回合核对一致的 {{ report.style_dna.coverage.reliable_rounds }}/{{ report.style_dna.coverage.formal_rounds }} 回合；职业画像为预设参考值（docs/style_dna.md），相似度仅供娱乐参考。</p>
+      </div>
+    </div>
+    <div class="dna-grid">
+      <div id="style-radar"></div>
+      <div class="dna-side">
+        <div class="dna-archetype">
+          <span class="dna-label">风格原型</span>
+          <span class="dna-type">{{ report.style_dna.archetype }}</span>
+        </div>
+        <p class="dna-summary">“{{ report.style_dna.summary }}”</p>
+        <div class="dna-matches">
+          {% for m in report.style_dna.matches %}
+          <div class="dna-match">
+            <span class="dna-name">{{ m.name }}</span>
+            <div class="dna-bar"><span style="width: {{ m.similarity }}%"></span></div>
+            <span class="dna-pct">{{ '%.1f' | format(m.similarity) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="dna-raw">
+          {% set raw = report.style_dna.raw %}
+          <span title="首杀对决尝试（首杀+首死）/ 总回合">首杀尝试率 {{ '%.0f' | format((raw.opening_rate or 0) * 100) }}%</span>
+          {% if raw.avg_distance_m is not none %}<span title="击杀时攻击方与受害方的平均距离">平均交战距离 {{ raw.avg_distance_m }}m</span>{% endif %}
+          {% if raw.avg_lifetime_ratio is not none %}<span title="回合内平均存活时长占比">平均存活时长 {{ '%.0f' | format(raw.avg_lifetime_ratio * 100) }}%</span>{% endif %}
+          {% if raw.late_kill_share is not none %}<span title="回合最后 25% 时段内的击杀占比">后段击杀占比 {{ '%.0f' | format(raw.late_kill_share * 100) }}%</span>{% endif %}
+          <span title="每回合道具引爆数（闪光/烟雾/手雷/燃烧弹）">道具/回合 {{ raw.utility_per_round }}</span>
+          {% if raw.early_event_share is not none %}<span title="回合前 20 秒内本人击杀/死亡事件占比">前 20s 事件占比 {{ '%.0f' | format(raw.early_event_share * 100) }}%</span>{% endif %}
+          {% if raw.position_dispersion_m is not none %}<span title="击杀位置相对质心的平均偏移">站位离散度 {{ raw.position_dispersion_m }}m</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if report.coach %}
+  <section class="panel coach-panel" id="coach">
+    <div class="panel-head">
+      <div>
+        <h2>教练建议 · Coach</h2>
+        <p class="panel-sub">{{ report.coach.rule_count }} 条规则按阈值触发，每条锚定本地图数据；严重度从高到低排序，点击“数据依据”可展开原始数值。建议基于本报告口径（部分为推断/近似层）。</p>
+      </div>
+    </div>
+    {% if report.coach.cards %}
+    <div class="coach-grid">
+      {% for card in report.coach.cards %}
+      <div class="coach-card sev-{{ card.severity }}">
+        <div class="coach-head">
+          <span class="coach-sev">{{ {'high': '高', 'medium': '中', 'low': '低'}[card.severity] }}</span>
+          <span class="coach-title">{{ card.title }}</span>
+        </div>
+        <p class="coach-body">{{ card.body }}</p>
+        <p class="coach-practice"><b>练习方向：</b>{{ card.practice }}</p>
+        <details class="coach-evidence">
+          <summary>数据依据</summary>
+          <code>{{ card.evidence | tojson }}</code>
+        </details>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">本场数据未触发任何改进建议——各项指标都在健康阈值之上。继续保持。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if report.highlights and report.highlights.timeline %}
+  <section class="panel highlights-panel" id="highlights">
+    <div class="panel-head">
+      <div>
+        <h2>高光回合 · 一键回放</h2>
+        <p class="panel-sub">规则识别（残局翻盘 / 多杀 / 瞬间连杀 / ECO 翻盘 / 速胜），命中任一即标记；仅逐回合核对一致的回合参与残局与多杀判定。点击“复制回放指令”后在 CS2 控制台粘贴执行（先 playdemo 加载，再 demo_goto 跳转）。</p>
+      </div>
+    </div>
+    <div class="timeline-strip" id="timeline-strip">
+      {% for cell in report.highlights.timeline %}
+      <span class="tl-cell tl-{{ cell.winner_side | default('none') | lower }}{% if cell.highlight %} tl-hl{% endif %}{% if not cell.reliable %} tl-unreliable{% endif %}"
+            title="R{{ cell.round_num }} · {{ cell.score }}{% if cell.winner_side %} · {{ cell.winner_side }} 胜{% endif %}{% if cell.highlight %} · 高光{% endif %}{% if not cell.reliable %} · 事件层未核对{% endif %}"></span>
+      {% endfor %}
+    </div>
+    {% if report.highlights.cards %}
+    <div class="hl-grid">
+      {% for card in report.highlights.cards %}
+      <div class="hl-card">
+        <div class="hl-top">
+          <span class="hl-round">R{{ card.round_num }}</span>
+          <span class="hl-score">{{ card.score }}</span>
+          <span class="hl-time" title="demo 内时刻（tickrate {{ report.highlights.tickrate | round(0) | int }}）">{{ card.goto_time }}</span>
+        </div>
+        <div class="hl-tags">
+          {% for tag in card.tags %}<span class="hl-tag hl-tag-{{ tag.key }}">{{ tag.label }}</span>{% endfor %}
+          {% if not card.reliable %}<span class="hl-tag hl-tag-warn" title="该回合事件层未与计分板核对一致，仅展示回合级信号（经济/耗时）">事件层未核对</span>{% endif %}
+        </div>
+        {% if card.notes %}<div class="hl-notes">{% for note in card.notes %}<div>{{ note }}</div>{% endfor %}</div>{% endif %}
+        {% if card.players %}
+        <div class="hl-players">{% for p in card.players %}<span>{{ p.name }} <b>{{ p.kills }}K</b></span>{% endfor %}</div>
+        {% endif %}
+        <div class="hl-actions">
+          <button type="button" class="hl-copy" data-cmd="{{ card.commands.combined | e }}">复制回放指令</button>
+          <span class="hl-cmd"><code>{{ card.commands.playdemo }}</code> → <code>{{ card.commands.goto }}</code></span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">本场没有命中高光规则的回合。</p>
+    {% endif %}
+  </section>
+  {% endif %}
 
   <div class="methodology">
     <strong>口径说明</strong>
@@ -870,11 +1069,14 @@
       corner = "被击杀者 ↓ / 击杀者 →";
     }
     let maxV = 0;
+    let totalKills = 0;
     for (const line of grid) {
       for (const cell of line) {
         maxV = Math.max(maxV, cell.f || 0, cell.r || 0);
+        totalKills += cell.f || 0;
       }
     }
+    const share = (v) => totalKills > 0 ? (100 * v / totalKills).toFixed(1) + "%" : "—";
     const pill = (value, color) => {
       if (!value) return '<span class="pill zero">0</span>';
       const alpha = maxV > 0 ? 0.30 + 0.70 * (value / maxV) : 0.55;
@@ -893,15 +1095,17 @@
       for (let c = 0; c < cols.length; c++) {
         const col = cols[c];
         const cell = (grid[r] && grid[r][c]) || { f: 0, r: 0 };
+        const tip = row.name + " → " + col.name + "：" + (cell.f || 0) + " 次（占本视图 " + share(cell.f || 0) + "）\n"
+          + col.name + " → " + row.name + "：" + (cell.r || 0) + " 次（占本视图 " + share(cell.r || 0) + "）";
         out.push(
-          '<td><div class="matrix-cell">' +
+          '<td title="' + esc(tip) + '"><div class="matrix-cell">' +
             pill(cell.f || 0, row.color) +
             pill(cell.r || 0, col.color) +
           '</div></td>'
         );
       }
       if (hasWorld) {
-        out.push('<td><div class="matrix-cell">' + pill(worldCol[r] || 0, "#8ea3b5") + '</div></td>');
+        out.push('<td title="' + esc(row.name + " 的环境/自杀死亡：" + (worldCol[r] || 0) + " 次") + '"><div class="matrix-cell">' + pill(worldCol[r] || 0, "#8ea3b5") + '</div></td>');
       }
       out.push('</tr>');
     }
@@ -1086,11 +1290,86 @@
     });
   });
 
+  let styleRadar = null;
+  function renderStyleDna() {
+    const host = $("#style-radar");
+    if (!host) return;
+    const dna = DATA.style_dna;
+    if (!dna || !dna.available) {
+      host.innerHTML = '<div class="empty">Style DNA 数据不可用。</div>';
+      return;
+    }
+    const allAxes = dna.axes || [];
+    const usableIdx = allAxes
+      .map((axis, index) => [axis, index])
+      .filter((pair) => pair[0].value !== null && pair[0].value !== undefined);
+    if (!usableIdx.length) {
+      host.innerHTML = '<div class="empty">覆盖回合不足，无法计算风格特征。</div>';
+      return;
+    }
+    if (!styleRadar) styleRadar = echarts.init(host);
+    const indicator = usableIdx.map((pair) => ({ name: pair[0].label, max: 1 }));
+    const playerValues = usableIdx.map((pair) => pair[0].value);
+    const topMatch = dna.matches && dna.matches.length ? dna.matches[0].name : null;
+    const proValues = topMatch && dna.profiles && dna.profiles[topMatch]
+      ? usableIdx.map((pair) => dna.profiles[topMatch][pair[1]])
+      : null;
+    const seriesData = [];
+    if (proValues) {
+      seriesData.push({
+        value: proValues,
+        name: topMatch,
+        lineStyle: { color: "#6cb2ff", width: 1.5, type: "dashed" },
+        itemStyle: { color: "#6cb2ff" },
+        areaStyle: { opacity: 0 }
+      });
+    }
+    seriesData.push({
+      value: playerValues,
+      name: dna.name || "你",
+      lineStyle: { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
+      itemStyle: { color: "#ffd24a" },
+      areaStyle: { color: "rgba(255,210,74,.17)" }
+    });
+    styleRadar.setOption({
+      backgroundColor: "transparent",
+      animationDuration: 350,
+      tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
+      radar: {
+        center: ["50%", "52%"], radius: "62%", splitNumber: 4, indicator: indicator,
+        axisName: { color: "#f2e2b8", fontSize: 12, fontWeight: 600 },
+        splitArea: { areaStyle: { color: ["rgba(255,213,122,.025)", "rgba(255,213,122,.055)"] } },
+        splitLine: { lineStyle: { color: "rgba(222,184,105,.42)" } },
+        axisLine: { lineStyle: { color: "rgba(222,184,105,.55)" } }
+      },
+      series: [{ type: "radar", symbol: "none", data: seriesData }]
+    }, true);
+    styleRadar.resize();
+  }
+
+  document.querySelectorAll(".hl-copy").forEach((button) => {
+    button.addEventListener("click", () => {
+      const cmd = button.dataset.cmd || "";
+      const done = () => {
+        const old = button.textContent;
+        button.textContent = "已复制 ✓";
+        setTimeout(() => { button.textContent = old; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).then(done, () => { window.prompt("手动复制回放指令：", cmd); });
+      } else {
+        window.prompt("手动复制回放指令：", cmd);
+      }
+    });
+  });
+
   window.addEventListener("resize", () => {
     if (radarChart) radarChart.resize();
+    if (styleRadar) styleRadar.resize();
   });
 
   renderAll();
+  renderStyleDna();
 })();
 {% endraw %}
 </script>

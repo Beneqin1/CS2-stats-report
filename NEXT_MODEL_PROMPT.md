@@ -4,13 +4,13 @@
 
 ---
 
-你是一名接手 **CS2Stats** 项目的资深 Python / Windows 桌面应用工程师。项目已经可用，当前版本 **1.2.0**，交付形态是 Windows `.exe`（PyInstaller onedir），用户是编程小白。你的任务是在**不破坏数据准确性**的前提下继续改进它。
+你是一名接手 **CS2Stats** 项目的资深 Python / Windows 桌面应用工程师。项目已经可用，当前版本 **1.3.0**，交付形态是 Windows `.exe`（PyInstaller onedir），用户是编程小白。你的任务是在**不破坏数据准确性**的前提下继续改进它。
 
 请先做三件事：
 
 1. 读 `README.md`（项目介绍、运行方式、数据口径）。
 2. 读 `README.txt`（面向用户的中文完整手册、FAQ、路径、杀软说明）。
-3. 读 `cs2stats/demo_parser.py`、`cs2stats/scoreboard.py`、`cs2stats/report_data.py`、`cs2stats/validation.py`、`cs2stats/demo_watch.py`、`cs2stats/gui.py`、`cs2stats/templates/report.html.j2`。
+3. 读 `cs2stats/demo_parser.py`、`cs2stats/scoreboard.py`、`cs2stats/extras.py`、`cs2stats/report_data.py`、`cs2stats/validation.py`、`cs2stats/demo_watch.py`、`cs2stats/gui.py`、`cs2stats/highlights.py`、`cs2stats/style_dna.py`、`cs2stats/coach.py`、`cs2stats/templates/report.html.j2` 与 `docs/style_dna.md`。
 
 不要先改代码。先运行一次现有校验，确认基线：
 
@@ -28,11 +28,15 @@
 
 当前报告包含：
 
-- Match Stats：K-D、+/-、K/D、K(HS)、D、A、KAST、Open Kills、ADR、Swing、Rating；All/T/CT 三态。
+- Match Stats：K-D、+/-、K/D、KPR、K(HS)、HS%、D、A、KAST、首杀、首死、FK%、ADR、MVP 次数、Swing、Rating；All/T/CT 三态。
 - Rating 分解表：KPR / DPR / KAST / Impact / ADR / Swing / econ Δ / Rating 逐项对照。
 - Performance Rating 横向条：全局 Rating 降序，三档颜色。
-- Kill Matrix：逐回合与计分板差分核对，仅保留一致回合；击杀/死亡双视角 + All / First kills / AWP / 手枪范围；attacker 为空的死亡归入“环境”行/列；无一致回合时整块隐藏。
+- Kill Matrix：逐回合与计分板差分核对，仅保留一致回合；击杀/死亡双视角 + All / First kills / 残局 1vX / AWP / 手枪范围；attacker 为空的死亡归入“环境”行/列；无一致回合时整块隐藏。
+- 数据可信度标签行：bot 接管检测 / 矩阵核对覆盖 / 事件层降级。
 - 目标选手雷达图 + 对比条形图。
+- 高光回合 · 一键回放：规则识别残局/多杀/瞬间连杀/ECO 翻盘/速胜，卡片带 playdemo + demo_goto 复制按钮；回合时间线条。
+- 打法风格指纹 Style DNA（实验）：六维特征 + 原型分类 + Top3 职业相似度（预设画像，口径见 docs/style_dna.md）。
+- 教练建议引擎：12 条阈值规则，严重度排序 + 数据依据可展开。
 - 头部渐变地图大标题 + 发光比分 + MVP 金卡；校验横幅 + 解析提示横幅；底部统一口径说明。
 
 ## 数据管线（关键，别搞反）
@@ -74,8 +78,12 @@ awpy Demo
 
 | 文件 | 职责 |
 |---|---|
-| `cs2stats/demo_parser.py` | awpy 读取、正式回合过滤、事件重建、kill_feed、T/CT 分面、首杀/交易/多杀、ParsedDemo、缓存接入 |
-| `cs2stats/scoreboard.py` | demoparser2 计分板属性层、KAST 回合差分（含 traded）、逐回合核对重建 Kill Matrix、自洽性检查、可用性/降级 |
+| `cs2stats/demo_parser.py` | awpy 读取、正式回合过滤、事件重建、kill_feed（含存活数/位置/距离/t）、T/CT 分面、首杀/交易/多杀、ParsedDemo、缓存接入 |
+| `cs2stats/scoreboard.py` | demoparser2 计分板属性层、KAST 回合差分（含 traded）、首杀/首死差分推断、规则 MVP、逐回合核对重建 Kill Matrix、自洽性检查、可用性/降级 |
+| `cs2stats/extras.py` | 道具使用统计、bot 接管检测（m_bControllingBot）与 kill_feed 清洗标记、data_quality 摘要 |
+| `cs2stats/highlights.py` | 高光回合识别（残局/多杀/瞬间连杀/ECO/速胜）+ demo_goto 指令；纯数据模块 |
+| `cs2stats/style_dna.py` | 六维风格特征、原型分类、职业画像相似度（预设画像）；纯数据模块 |
+| `cs2stats/coach.py` | 教练建议引擎：12 条阈值规则 + 上下文构建；RULES 列表可外部化 |
 | `cs2stats/validation.py` | fixture 校验、`validated_fields`、ADR floor、错误报告 |
 | `cs2stats/report_data.py` | 报表 JSON：players/teams/radar/compare/matrix/meta/MVP/Rating 分解 |
 | `cs2stats/rating.py` | Rating 2.0 近似公式 / Impact / Swing |
@@ -85,7 +93,7 @@ awpy Demo
 | `cs2stats/demo_watch.py` | 监听 demo 文件夹、稳定等待、去重、报告生成 |
 | `cs2stats/first_run.py` | `stats.cfg` / 旧版 cfg 清理 / `settings.json` / 首次运行 |
 | `cs2stats/paths.py` | `output/`、`settings.json`、onedir 根目录 |
-| `cs2stats/gui.py` | Tkinter 双标签页（HLTV 深色主题） |
+| `cs2stats/gui.py` | Tkinter 双标签页（亮色系主题，配色集中在文件顶部 design token） |
 | `cs2stats/cli.py` | `--watch`、`--watch-once`、手动 demo、`--no-cache` / `--clear-cache`、`--gsi`（旧实验功能） |
 | `validate_stats.py` | 独立 fixture 校验脚本 |
 | `build_exe.ps1` | onedir PyInstaller 打包 |
