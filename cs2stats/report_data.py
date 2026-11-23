@@ -30,7 +30,13 @@ from .utils import clamp
 
 ALL = "ALL"
 SIDE_KEYS = (ALL, SIDE_T, SIDE_CT)
-SCOPE_LABELS = (("all", "All"), ("first", "First kills"))
+SCOPE_LABELS = (
+    ("all", "All"),
+    ("first", "First kills"),
+    ("clutch", "残局 1vX"),
+    ("awp", "AWP"),
+    ("pistol", "手枪"),
+)
 
 
 def _metrics_payload(metrics: Metrics) -> dict[str, Any]:
@@ -49,6 +55,7 @@ def _metrics_payload(metrics: Metrics) -> dict[str, Any]:
         "multikill_4k": metrics.multikill_4k,
         "multikill_5k": metrics.multikill_5k,
         "multikill_rounds": metrics.multikill_rounds,
+        "mvps": metrics.mvps,
         "damage": metrics.damage,
         "utility_damage": metrics.utility_damage,
         "kast_rounds": metrics.kast_rounds,
@@ -59,6 +66,8 @@ def _metrics_payload(metrics: Metrics) -> dict[str, Any]:
         "kast": metrics.kast,
         "adr": metrics.adr,
         "survival": metrics.survival,
+        "hs_pct": metrics.hs_pct,
+        "fk_rate": metrics.fk_rate,
         "impact": metrics.impact,
         "base_rating": metrics.base_rating,
         "econ_delta": metrics.econ_delta,
@@ -289,11 +298,24 @@ def _matrix_payload(
     pms: list[PlayerMetrics],
 ) -> dict[str, Any]:
     teams = demo.team_list
+    empty_world = {
+        scope: {side: {"row": [], "col": []} for side in SIDE_KEYS}
+        for scope, _ in SCOPE_LABELS
+    }
     if len(teams) < 2:
-        return {"scopes": [], "sides": list(SIDE_KEYS), "rows": [], "cols": [], "cells": {}}
+        return {
+            "scopes": [],
+            "sides": list(SIDE_KEYS),
+            "rows": [],
+            "cols": [],
+            "cells": {},
+            "world": empty_world,
+            "coverage": {},
+        }
     team_a, team_b = teams[0], teams[1]
     rows = [pm.player for pm in pms if pm.player.team_key == team_a.key]
     cols = [pm.player for pm in pms if pm.player.team_key == team_b.key]
+    matrix_world = getattr(demo, "matrix_world", {}) or {}
 
     def cell_counts(scope: str, side: str, attacker: Player, victim: Player) -> tuple[int, int]:
         if side == ALL:
@@ -310,14 +332,32 @@ def _matrix_payload(
         reverse = int(demo.matrix.get(scope, {}).get(side, {}).get((victim.steamid, attacker.steamid), 0))
         return forward, reverse
 
+    def world_count(scope: str, side: str, victim: Player) -> int:
+        if side == ALL:
+            return sum(
+                int(matrix_world.get(scope, {}).get(each_side, {}).get(victim.steamid, 0))
+                for each_side in SIDES
+            )
+        return int(matrix_world.get(scope, {}).get(side, {}).get(victim.steamid, 0))
+
+    def scope_has_data(scope: str) -> bool:
+        for side in SIDES:
+            if demo.matrix.get(scope, {}).get(side):
+                return True
+            if matrix_world.get(scope, {}).get(side):
+                return True
+        return False
+
     scopes = [
         (key, label)
         for key, label in SCOPE_LABELS
-        if key != "awp" or getattr(demo, "supports_awp_matrix", True)
+        if key == "all" or scope_has_data(key)
     ]
     cells: dict[str, dict[str, list[list[dict[str, int]]]]] = {}
+    world: dict[str, dict[str, dict[str, list[int]]]] = {}
     for scope, _ in scopes:
         cells[scope] = {}
+        world[scope] = {}
         for side in SIDE_KEYS:
             grid = []
             for row_player in rows:
@@ -327,15 +367,40 @@ def _matrix_payload(
                     row.append({"f": forward, "r": reverse})
                 grid.append(row)
             cells[scope][side] = grid
+            world[scope][side] = {
+                # Extra bottom row: world/suicide deaths of each column player.
+                "row": [world_count(scope, side, col_player) for col_player in cols],
+                # Extra right column: world/suicide deaths of each row player.
+                "col": [world_count(scope, side, row_player) for row_player in rows],
+            }
 
-    available = bool(demo.matrix)
+    available = False
+    if demo.matrix:
+        for side in SIDE_KEYS:
+            grid = cells["all"][side]
+            if any(cell["f"] or cell["r"] for line in grid for cell in line):
+                available = True
+                break
+            if any(world["all"][side]["row"]) or any(world["all"][side]["col"]):
+                available = True
+                break
+    coverage = getattr(demo, "matrix_coverage", {}) or {}
+    covered = int(coverage.get("covered", 0) or 0)
+    total = int(coverage.get("total", 0) or 0)
+    if not available:
+        note = coverage.get("reason") or "事件层与计分板属性不一致，Kill Matrix 无法可靠重建，已隐藏。"
+    elif covered < total:
+        note = (
+            f"事件层逐回合与计分板差分核对：覆盖 {covered}/{total} 回合"
+            f"（排除回合：{', '.join(str(n) for n in coverage.get('excluded_rounds') or [])}）；"
+            "环境/自杀死亡在“环境”行/列。"
+        )
+    else:
+        note = "事件层逐回合与计分板差分核对一致；环境/自杀死亡在“环境”行/列。"
     return {
         "available": available,
-        "note": (
-            ""
-            if available
-            else "事件层与计分板属性不一致，Kill Matrix 无法可靠重建，已隐藏。"
-        ),
+        "note": note,
+        "coverage": coverage,
         "scopes": [{"key": key, "label": label} for key, label in scopes],
         "sides": list(SIDE_KEYS),
         "rows": [
@@ -359,6 +424,7 @@ def _matrix_payload(
             for player in cols
         ],
         "cells": cells,
+        "world": world,
     }
 
 
@@ -439,6 +505,9 @@ def build_report(
     }
 
     scoreboard = getattr(demo, "scoreboard_meta", {}) or {}
+    warnings = list(getattr(demo, "side_warnings", []) or []) + list(
+        getattr(demo, "consistency_warnings", []) or []
+    )
     fixture_meta = validation or {}
     precision = fixture_meta.get("fixture_precision") or {}
     try:
@@ -446,7 +515,8 @@ def build_report(
     except (TypeError, ValueError):
         adr_decimals = 1
     adr_rounding = str(fixture_meta.get("adr_rounding") or "half_up").strip().lower()
-    matrix_available = bool(getattr(demo, "matrix", {}))
+    matrix_payload = _matrix_payload(demo, pms)
+    matrix_available = bool(matrix_payload.get("available"))
 
     target_payload = None
     if target:
@@ -480,6 +550,8 @@ def build_report(
             "adr_rounding": adr_rounding,
             "scoreboard": scoreboard,
             "matrix_available": matrix_available,
+            "warnings": warnings,
+            "from_cache": bool(getattr(demo, "from_cache", False)),
         },
         "summary": summary,
         "validation": _validation_payload(validation),
@@ -490,5 +562,5 @@ def build_report(
         "chart_order": chart_order,
         "radar": _radar_payload(demo, target, averages) if target else None,
         "compare": _compare_payload(demo, target, averages) if target else None,
-        "matrix": _matrix_payload(demo, pms),
+        "matrix": matrix_payload,
     }

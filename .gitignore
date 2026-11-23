@@ -24,6 +24,7 @@ stat.cfg
 stat_cs2stats.cfg
 stats.cfg
 settings.json
+cache/
 *.log
 
 # Generated docs artifacts

@@ -1,14 +1,18 @@
 """Approximate performance metrics.
 
-The exact layer (kills/deaths/assists/ADR/KAST) is rebuilt from formal-round
-events and checked against a scoreboard fixture elsewhere.  Everything in this
-module is a deliberately transparent approximation, not an HLTV implementation:
+The exact layer (kills/deaths/assists/ADR) is rebuilt from scoreboard
+properties and checked against a scoreboard fixture elsewhere.  Everything in
+this module is a deliberately transparent approximation, not an HLTV
+implementation:
 
-* base rating: a Rating 2.1-style formula, with a lower Swing weight and a
-  higher kill weight than the earlier build;
-* economy delta: small bonus/penalty from equipment-weighted kills/deaths;
-* swing: a man-advantage proxy, displayed as a percentage;
-* MK rating: base rating plus a reduced multi-kill round bonus.
+* rating: the public Rating 2.0 approximation
+  ``0.0073*KAST + 0.3591*KPR - 0.5329*DPR + 0.2372*Impact + 0.0032*ADR + 0.1587``
+  with KAST as a percentage;
+* impact: the classic ``2.13*KPR + 0.42*APR - 0.41`` base plus explicit
+  opening-kill and multi-kill round terms;
+* economy delta / swing: separate display-only components (equipment-weighted
+  kills/deaths and a man-advantage proxy), not folded into rating;
+* MK rating: rating plus a reduced multi-kill round bonus.
 
 The report must label all of these as approximate.  Never feed them back into
 the exact layer.
@@ -26,6 +30,8 @@ from .config import (
     IMPACT_APR_COEF,
     IMPACT_INTERCEPT,
     IMPACT_KPR_COEF,
+    IMPACT_MULTIKILL_COEF,
+    IMPACT_OPENING_COEF,
     MK_RATING_BONUS,
     RATING_ADR_COEF,
     RATING_DPR_COEF,
@@ -35,7 +41,6 @@ from .config import (
     RATING_KPR_COEF,
     SWING_PER_ROUND,
     SWING_PCT_LIMIT,
-    SWING_RATING_COEF,
 )
 from .demo_parser import Counters, ParsedDemo, Player
 from .utils import clamp, safe_div
@@ -57,6 +62,7 @@ class Metrics:
     multikill_4k: int
     multikill_5k: int
     multikill_rounds: int
+    mvps: int
     damage: int
     utility_damage: int
     kast_rounds: int
@@ -67,6 +73,8 @@ class Metrics:
     kast: float
     adr: float
     survival: float
+    hs_pct: float
+    fk_rate: float
     impact: float
     base_rating: float
     econ_delta: float
@@ -99,8 +107,19 @@ def metrics_from_counters(counter: Counters) -> Metrics:
     kast = counter.kast
     adr = counter.adr
     survival = safe_div(counter.survived_rounds, rounds) * 100.0
+    hs_pct = safe_div(counter.headshot_kills * 100.0, counter.kills)
+    opening_duels = counter.opening_kills + counter.opening_deaths
+    fk_rate = safe_div(counter.opening_kills * 100.0, opening_duels) if opening_duels else 0.0
+    opening_per_round = safe_div(counter.opening_kills, rounds)
+    multikill_per_round = safe_div(counter.multikill_rounds, rounds)
 
-    impact = IMPACT_KPR_COEF * kpr + IMPACT_APR_COEF * apr + IMPACT_INTERCEPT
+    impact = (
+        IMPACT_KPR_COEF * kpr
+        + IMPACT_APR_COEF * apr
+        + IMPACT_INTERCEPT
+        + IMPACT_OPENING_COEF * opening_per_round
+        + IMPACT_MULTIKILL_COEF * multikill_per_round
+    )
     base = (
         RATING_KAST_COEF * kast
         + RATING_KPR_COEF * kpr
@@ -124,8 +143,11 @@ def metrics_from_counters(counter: Counters) -> Metrics:
         -SWING_PCT_LIMIT,
         SWING_PCT_LIMIT,
     )
-    rating = max(0.0, base + econ_delta + SWING_RATING_COEF * swing_pct / 100.0)
-    mk_rating = rating + MK_RATING_BONUS * safe_div(counter.multikill_rounds, rounds)
+    # Rating is the plain Rating 2.0 approximation; economy and swing stay
+    # visible as separate columns instead of being folded in, so the value can
+    # be cross-checked against the public formula.
+    rating = max(0.0, base)
+    mk_rating = rating + MK_RATING_BONUS * multikill_per_round
 
     return Metrics(
         rounds=rounds,
@@ -142,6 +164,7 @@ def metrics_from_counters(counter: Counters) -> Metrics:
         multikill_4k=counter.multikill_4k,
         multikill_5k=counter.multikill_5k,
         multikill_rounds=counter.multikill_rounds,
+        mvps=counter.mvps,
         damage=counter.damage,
         utility_damage=counter.utility_damage,
         kast_rounds=counter.kast_rounds,
@@ -152,6 +175,8 @@ def metrics_from_counters(counter: Counters) -> Metrics:
         kast=kast,
         adr=adr,
         survival=survival,
+        hs_pct=hs_pct,
+        fk_rate=fk_rate,
         impact=impact,
         base_rating=base,
         econ_delta=econ_delta,

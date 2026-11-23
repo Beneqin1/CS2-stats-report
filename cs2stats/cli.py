@@ -95,6 +95,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gsi-port", type=int, default=32123, help="GSI 监听端口（默认 32123）")
     parser.add_argument("--no-open", action="store_true", help="自动监听/实时模式生成后不自动打开浏览器")
     parser.add_argument("--json", action="store_true", help="把校验/结果摘要以 JSON 打印到 stdout")
+    parser.add_argument("--no-cache", action="store_true", help="跳过解析缓存，强制重新解析 demo")
+    parser.add_argument("--clear-cache", action="store_true", help="清除全部解析缓存后退出")
     return parser
 
 
@@ -102,6 +104,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     _utf8_console()
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.clear_cache:
+        from .cache import clear
+
+        removed = clear()
+        print(f"已清除 {removed} 个解析缓存。")
+        return 0
+    if args.no_cache:
+        import os
+
+        os.environ["CS2STATS_NO_CACHE"] = "1"
 
     if args.watch is None and args.watch_once:
         args.watch = ""

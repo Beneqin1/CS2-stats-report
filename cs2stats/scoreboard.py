@@ -17,10 +17,189 @@ scoreboard.
 
 from __future__ import annotations
 
+from collections import Counter
 from typing import Any
 
-from .config import SIDE_CT, SIDE_T
+from .config import SIDE_CT, SIDE_T, SIDES
 from .demo_parser import Counters, ParsedDemo, Player
+
+MATRIX_SCOPES = ("all", "first", "clutch", "awp", "pistol")
+
+_PISTOL_WEAPONS = {
+    "usp_silencer",
+    "hkp2000",
+    "glock",
+    "p250",
+    "fiveseven",
+    "tec9",
+    "cz75a",
+    "deagle",
+    "revolver",
+    "elite",
+}
+
+
+def _scope_matches(entry: dict[str, Any], scope: str) -> bool:
+    if scope == "all":
+        return True
+    if scope == "first":
+        return bool(entry.get("opening"))
+    if scope == "clutch":
+        # Kills made while the attacker's team is down to its last player
+        # against at least two opponents (1vX situation).
+        attacker_alive = entry.get("attacker_alive")
+        victim_alive = entry.get("victim_alive")
+        return attacker_alive == 1 and _int(victim_alive, 0) >= 2
+    weapon = str(entry.get("weapon") or "").lower()
+    if scope == "awp":
+        return "awp" in weapon
+    if scope == "pistol":
+        return weapon in _PISTOL_WEAPONS
+    return False
+
+
+def _hide_matrix(parsed: ParsedDemo, reason: str) -> None:
+    parsed.matrix = {}
+    parsed.matrix_world = {}
+    parsed.matrix_coverage = {
+        "covered": 0,
+        "total": len(parsed.counted_rounds),
+        "excluded_rounds": [item.round_num for item in parsed.counted_rounds],
+        "reason": reason,
+    }
+
+
+def _collect_scoreboard_deltas(
+    parsed: ParsedDemo,
+    formal_rounds,
+    by_round: dict[tuple[int, int], dict[str, Any]],
+) -> tuple[dict[tuple[int, int], tuple[int, int, int]], set[int]]:
+    """Per-round scoreboard kill/death/assist deltas for every player.
+
+    Mirrors the chained-delta logic of the main loop: a missing round leaves
+    the running totals untouched, so the next present round absorbs the gap.
+    """
+
+    deltas: dict[tuple[int, int], tuple[int, int, int]] = {}
+    missing: set[int] = set()
+    for player in parsed.players:
+        prev_kills = 0
+        prev_deaths = 0
+        prev_assists = 0
+        for round_item in formal_rounds:
+            row = by_round.get((player.steamid, round_item.round_num))
+            if row is None:
+                missing.add(round_item.index)
+                continue
+            total_kills = _int(row.get("kills_total"))
+            total_deaths = _int(row.get("deaths_total"))
+            total_assists = _int(row.get("assists_total"))
+            deltas[(round_item.index, player.steamid)] = (
+                max(0, total_kills - prev_kills),
+                max(0, total_deaths - prev_deaths),
+                max(0, total_assists - prev_assists),
+            )
+            prev_kills = total_kills
+            prev_deaths = total_deaths
+            prev_assists = total_assists
+    return deltas, missing
+
+
+def _reliable_rounds(
+    parsed: ParsedDemo,
+    formal_rounds,
+    sb_kd: dict[tuple[int, int], tuple[int, int]],
+    rounds_missing: set[int],
+) -> tuple[set[int], list[int]]:
+    """Rounds whose event attribution matches the scoreboard exactly.
+
+    A round is trusted only when every player's event-derived kills *and*
+    deaths equal the scoreboard per-round deltas.  Bot-takeover demos shift
+    both kills and deaths between players for a span of rounds; those rounds
+    are excluded instead of shown with wrong pairs.
+    """
+
+    reliable: set[int] = set()
+    excluded: list[int] = []
+    for round_item in formal_rounds:
+        index = round_item.index
+        if index in rounds_missing:
+            excluded.append(round_item.round_num)
+            continue
+        ok = True
+        for player in parsed.players:
+            sb_kills, sb_deaths, _ = sb_kd.get((index, player.steamid), (0, 0, 0))
+            if player.kill_rounds.get(index, 0) != sb_kills:
+                ok = False
+                break
+            if player.death_round_counts.get(index, 0) != sb_deaths:
+                ok = False
+                break
+        if ok:
+            reliable.add(index)
+        else:
+            excluded.append(round_item.round_num)
+    return reliable, excluded
+
+
+def _rebuild_matrix(
+    parsed: ParsedDemo,
+    formal_rounds,
+    reliable: set[int],
+    excluded: list[int],
+) -> None:
+    """Rebuild the Kill Matrix from event-reliable rounds only.
+
+    World/suicide deaths are collected separately so they render as their own
+    row/column instead of being dropped.
+    """
+
+    total = len(formal_rounds)
+    if not reliable:
+        _hide_matrix(parsed, "没有任何回合的事件归因与计分板差分一致")
+        return
+
+    matrix: dict[str, dict[str, dict[tuple[int, int], int]]] = {
+        scope: {side: {} for side in SIDES} for scope in MATRIX_SCOPES
+    }
+    world: dict[str, dict[str, Counter]] = {
+        scope: {side: Counter() for side in SIDES} for scope in MATRIX_SCOPES
+    }
+    for entry in parsed.kill_feed:
+        round_index = entry.get("round_index")
+        if round_index not in reliable:
+            continue
+        victim = entry.get("victim")
+        attacker = entry.get("attacker")
+        victim_side = parsed.side_for(round_index, victim) if victim is not None else None
+        for scope in MATRIX_SCOPES:
+            if not _scope_matches(entry, scope):
+                continue
+            if attacker is None:
+                if victim_side in SIDES:
+                    world[scope][victim_side][victim] += 1
+                continue
+            attacker_side = parsed.side_for(round_index, attacker)
+            if attacker_side not in SIDES or victim_side not in SIDES:
+                continue
+            if attacker_side == victim_side:
+                # Team-kills are not part of the cross-team matrix.
+                continue
+            cell = matrix[scope][attacker_side]
+            key = (attacker, victim)
+            cell[key] = cell.get(key, 0) + 1
+
+    parsed.matrix = matrix
+    parsed.matrix_world = {
+        scope: {side: dict(counter) for side, counter in by_side.items()}
+        for scope, by_side in world.items()
+    }
+    parsed.matrix_coverage = {
+        "covered": len(reliable),
+        "total": total,
+        "excluded_rounds": sorted(excluded),
+        "reason": "",
+    }
 
 _SCORE_PROPS = [
     "kills_total",
@@ -163,6 +342,50 @@ def _opening_counts(parser, parsed: ParsedDemo, formal_rounds) -> tuple[dict[int
     return counts, sides, warnings
 
 
+def _consistency_checks(
+    parsed: ParsedDemo,
+    formal_rounds,
+    sb_kd: dict[tuple[int, int], tuple[int, int]],
+    rounds_missing: set[int],
+) -> None:
+    """Cross-check totals so broken parses surface as warnings, not bad data."""
+
+    warnings: list[str] = []
+    counted = len(parsed.counted_rounds)
+    covered = len(formal_rounds)
+    if covered != counted:
+        warnings.append(
+            f"计分板 round_end 只覆盖 {covered}/{counted} 个正式回合；缺失回合按不可靠处理。"
+        )
+    score_sum = sum(team.score for team in parsed.teams.values())
+    if score_sum != counted:
+        warnings.append(f"双方比分之和（{score_sum}）与正式回合数（{counted}）不一致。")
+    total_kills = sum(player.exact_int("kills") for player in parsed.players)
+    total_deaths = sum(player.exact_int("deaths") for player in parsed.players)
+    if total_deaths < total_kills:
+        warnings.append(f"总死亡（{total_deaths}）小于总击杀（{total_kills}），数据自相矛盾。")
+    for player in parsed.players:
+        delta_kills = sum(value[0] for (index, sid), value in sb_kd.items() if sid == player.steamid)
+        delta_deaths = sum(value[1] for (index, sid), value in sb_kd.items() if sid == player.steamid)
+        if delta_kills != player.exact_int("kills"):
+            warnings.append(
+                f"{player.name}：每回合击杀差分之和（{delta_kills}）与计分板总计"
+                f"（{player.exact_int('kills')}）不一致。"
+            )
+        if delta_deaths != player.exact_int("deaths"):
+            warnings.append(
+                f"{player.name}：每回合死亡差分之和（{delta_deaths}）与计分板总计"
+                f"（{player.exact_int('deaths')}）不一致。"
+            )
+    if rounds_missing:
+        warnings.append(
+            f"{len(rounds_missing)} 个回合缺少部分选手的计分板快照，相关回合的 Kill Matrix 已排除。"
+        )
+    if len(parsed.players) < 2:
+        warnings.append(f"只解析到 {len(parsed.players)} 名选手，demo 可能不完整。")
+    parsed.consistency_warnings = warnings
+
+
 def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
     """Rewrite exact counters from scoreboard properties.
 
@@ -176,6 +399,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
     except Exception as exc:  # pragma: no cover - packaging/install problem
         parsed.side_warnings.append(f"计分板属性不可用（{exc}）；精确层退回事件重建。")
         parsed.scoreboard_meta["applied"] = False
+        _hide_matrix(parsed, "计分板属性不可用，事件层无法核对")
         return False
 
     try:
@@ -185,6 +409,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
         if not formal_rounds:
             parsed.side_warnings.append("计分板属性未找到正式回合的 round_end 事件。")
             parsed.scoreboard_meta["applied"] = False
+            _hide_matrix(parsed, "计分板缺少 round_end 事件，事件层无法核对")
             return False
 
         ticks = [end_ticks[item.round_num] for item in formal_rounds]
@@ -194,12 +419,14 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
     except Exception as exc:
         parsed.side_warnings.append(f"计分板属性读取失败（{exc}）；精确层退回事件重建。")
         parsed.scoreboard_meta["applied"] = False
+        _hide_matrix(parsed, "计分板属性读取失败，事件层无法核对")
         return False
 
     final_rows = _rows_by_steamid(final_frame, final_tick)
     if not final_rows:
         parsed.side_warnings.append("计分板属性为空；精确层退回事件重建。")
         parsed.scoreboard_meta["applied"] = False
+        _hide_matrix(parsed, "计分板属性为空，事件层无法核对")
         return False
 
     by_round: dict[tuple[int, int], dict[str, Any]] = {}
@@ -218,6 +445,32 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
 
     opening_counts, opening_sides, opening_warnings = _opening_counts(parser, parsed, formal_rounds)
     parsed.side_warnings.extend(opening_warnings)
+
+    sb_kd, rounds_missing = _collect_scoreboard_deltas(parsed, formal_rounds, by_round)
+    reliable_rounds, excluded_rounds = _reliable_rounds(parsed, formal_rounds, sb_kd, rounds_missing)
+
+    # Rule-based round MVP from exact scoreboard deltas: the winner-team
+    # player with the highest round impact (kills + 0.45 * assists).  Local
+    # GOTV demos carry no round_mvp event, so the report labels this as an
+    # approximation.
+    round_mvps: dict[int, int] = {}
+    for round_item in formal_rounds:
+        winner_key = parsed.winner_team_for(round_item.index)
+        if winner_key is None:
+            continue
+        best: tuple[float, int] | None = None
+        for player in parsed.players:
+            if player.team_key != winner_key:
+                continue
+            kills, _, assists = sb_kd.get((round_item.index, player.steamid), (0, 0, 0))
+            impact = kills + 0.45 * assists
+            if impact <= 0:
+                continue
+            if best is None or impact > best[0]:
+                best = (impact, player.steamid)
+        if best is not None:
+            round_mvps[round_item.round_num] = best[1]
+    parsed.round_mvps = round_mvps
 
     event_reliable = True
     differences: list[dict[str, Any]] = []
@@ -336,7 +589,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             killed = kills > 0
             assisted = assists > 0
             survived = deaths == 0
-            traded = event_reliable and round_item.index in old_traded
+            traded = round_item.index in reliable_rounds and round_item.index in old_traded
             if killed or assisted or survived or traded:
                 kast_rounds += 1
                 counter.kast_rounds += 1
@@ -367,6 +620,13 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
         new_raw.multikill_4k = multikill[4]
         new_raw.multikill_5k = multikill[5]
         new_raw.multikill_rounds = multikill_rounds
+        for round_item in formal_rounds:
+            if round_mvps.get(round_item.round_num) != player.steamid:
+                continue
+            new_raw.mvps += 1
+            mvp_side = parsed.team_side_for(round_item.index, player.team_key)
+            if mvp_side in (SIDE_T, SIDE_CT):
+                side[mvp_side].mvps += 1
 
         for each_side in (SIDE_T, SIDE_CT):
             counter = side[each_side]
@@ -448,6 +708,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             "traded_deaths": False,
             "multikill_rounds": True,
             "swing": True,
+            "mvps": True,
         }
         for each_side in (SIDE_T, SIDE_CT):
             availability[f"kills_{each_side}"] = True
@@ -455,14 +716,30 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             availability[f"adr_{each_side}"] = True
         parsed.field_availability[player.steamid] = availability
 
+    _rebuild_matrix(parsed, formal_rounds, reliable_rounds, excluded_rounds)
+    _consistency_checks(parsed, formal_rounds, sb_kd, rounds_missing)
+    coverage = parsed.matrix_coverage
+    if coverage.get("covered", 0) < coverage.get("total", 0):
+        excluded = coverage.get("excluded_rounds") or []
+        detail = (
+            f"排除回合：{', '.join(str(item) for item in excluded)}"
+            if excluded
+            else "无可用回合"
+        )
+        parsed.side_warnings.append(
+            f"Kill Matrix 按逐回合核对重建：{coverage.get('covered', 0)}/{coverage.get('total', 0)} "
+            f"回合的事件归因与计分板差分一致（{detail}）；不一致的回合不进入矩阵。"
+        )
+
     if not event_reliable:
-        parsed.matrix = {}
         for player in parsed.players:
             parsed.field_availability.setdefault(player.steamid, {})["swing"] = True
         parsed.side_warnings.append(
             "事件层（player_death）与计分板属性不一致，疑似 bot 接管/录制者归因问题："
-            "Kill Matrix、A(f)、D(t) 已隐藏；K/D/A/ADR/K(hs)、Open Kills 使用计分板属性/差分；"
-            "KAST 按计分板每回合 K/A/S 计算，不包含 traded 回合；Swing 使用计分板每回合 K/A/D 近似。"
+            "A(f)、D(t) 已隐藏；K/D/A/ADR/K(hs)、Open Kills 使用计分板属性/差分；"
+            "KAST 按计分板每回合 K/A/S 计算，traded 回合仅计入逐回合核对一致的回合；"
+            "Swing 使用计分板每回合 K/A/D 近似；"
+            "Kill Matrix 仅覆盖逐回合核对一致的回合。"
         )
 
     for team in parsed.teams.values():
@@ -478,9 +755,17 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
         "source": "demoparser2 scoreboard properties",
         "rounds": total_rounds,
         "event_layer_reliable": event_reliable,
-        "kast_includes_traded": bool(event_reliable),
+        "kast_includes_traded": "reliable rounds only",
         "adr_source": "damage_total / total_rounds_played",
-        "kast_source": "K/A/S round deltas from scoreboard totals (no traded rounds)",
+        "kast_source": (
+            "K/A/S round deltas from scoreboard totals; traded rounds counted "
+            "only where event attribution matches the scoreboard"
+        ),
+        "matrix_coverage": parsed.matrix_coverage,
+        "mvp_source": (
+            "rule approximation: winner-team player with highest "
+            "round impact (kills + 0.45*assists), from scoreboard deltas"
+        ),
         "swing_source": (
             "event stream"
             if event_reliable

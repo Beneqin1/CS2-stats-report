@@ -20,29 +20,24 @@ Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
 - **自动监听**：监听 `<CS2>\game\csgo\replays\`，文件大小稳定后解析，自动打开报告。
 - **手动模式**：也可以直接选择一个已有 `.dem`。
 - **Match Stats**：K-D、+/-、K/D、K(HS)、D、A、KAST、Open Kills、ADR、Swing、Rating，支持 All / T / CT 切换。
+- **Rating 分解**：每人生成 KPR / DPR / KAST / Impact / ADR 与最终 Rating 的对照表，Rating 2.0 近似公式各项可单独核对。
 - **Performance Rating**：十名选手按 Rating 全局排序，三档颜色（优 / 中 / 差）。
-- **Kill Matrix**：事件层可靠时显示，逐条统计击杀者 → 被击杀者；不可靠时隐藏并说明原因。
+- **Kill Matrix**：逐回合与计分板差分核对，仅保留完全一致的回合；含击杀 / 死亡双视角与 All / First kills / AWP / 手枪 维度，环境 / 自杀归入“环境”行列；核对不一致的回合在报告中列明。
 - **Player Performance**：目标选手的六维雷达图 + 与全场平均的对比条形图。
 - **MVP**：头部展示本场 Rating 最高的获胜方选手。
 - **离线单文件**：Chart/ECharts、CSS、数据全部内嵌，不需要联网。
 
 ## 快速开始（Windows）
 
-1. 下载 `CS2Stats-1.1.0-onedir.zip`，完整解压。
-2. 进入 `CS2Stats-1.1.0-onedir`，双击 `CS2Stats\CS2Stats.exe`。
-3. 第一次启动会自动生成 `stat.cfg`，并尝试复制到 CS2 的 `game\csgo\cfg`。
-   - 如果已有 `stat.cfg`，程序不会覆盖，会改名为 `stat_cs2stats.cfg`。
+1. 下载 `CS2Stats-1.2.0-onedir.zip`，完整解压。
+2. 进入 `CS2Stats-1.2.0-onedir`，双击 `CS2Stats\CS2Stats.exe`。
+3. 第一次启动会自动生成 `stats.cfg`，并尝试复制到 CS2 的 `game\csgo\cfg`。
+   - 旧版本生成的 `stat.cfg` / `stat_cs2stats.cfg` 会在确认是本程序生成的内容后自动清理。
    - 如果自动定位失败，程序会让你选择 `game\csgo\cfg` 目录。
 4. 打开 CS2 控制台，**在地图加载之前**执行：
 
    ```text
-   exec stat
-   ```
-
-   如果程序提示复制的是 `stat_cs2stats.cfg`，则执行：
-
-   ```text
-   exec stat_cs2stats
+   exec stats
    ```
 
    然后加载地图：
@@ -67,7 +62,7 @@ Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
 
    并自动用默认浏览器打开。
 
-> onedir 版本中，`stat.cfg`、`settings.json`、`output\` 都在 `CS2Stats-1.1.0-onedir\` 根目录（exe 的上一级）。  
+> onedir 版本中，`stats.cfg`、`settings.json`、`output\` 都在 `CS2Stats-1.2.0-onedir\` 根目录（exe 的上一级）。  
 > onefile 版本则在 exe 同目录。
 
 ## 手动解析已有 demo
@@ -90,16 +85,17 @@ Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
 |---|---|---|---|
 | 精确层 | Kills / Deaths / Assists / ADR | `demoparser2` 计分板属性 | 已用同一场计分板截图 fixture 逐项校验；ADR 按截图的“伤害/局”向下取整 |
 | 计分板读取 | K(HS) | `headshot_kills_total` | 计分板有值，但截图只有爆头率，未逐项 fixture 校验 |
-| 推断层 | KAST、Open Kills、Swing | 逐回合 K/A/S/D 差分 | 明确标“推断/参考”，不宣称与 HLTV 完全一致 |
-| 事件层 | Kill Matrix、A(f)、D(t) | `player_death` / 回合事件 | 若 demo 存在 bot 接管等导致事件归因错乱，会隐藏矩阵并说明 |
-| 近似层 | Rating / Swing / MVP | 自定义近似公式 | **非 HLTV 官方数值**，不可用于与 HLTV 页面逐位比对 |
+| 推断层 | KAST、Open Kills、Swing | 逐回合 K/A/S/D 差分 | 明确标“推断/参考”，不宣称与 HLTV 完全一致；KAST 的 traded 只计入逐回合核对一致的回合 |
+| 事件层 | Kill Matrix、A(f)、D(t) | `player_death` / 回合事件 | 逐回合与计分板差分核对，仅保留完全一致的回合进入矩阵，排除回合在报告中列明 |
+| 近似层 | Rating / Swing / MVP | Rating 2.0 近似公式 | **非 HLTV 官方数值**；报告附 Rating 分解表便于交叉核对 |
 
 已知限制：
 
-- 当前 demo 出现 bot 接管时，`player_death` 的 attacker/victim 归因会错位；程序会自动切换到计分板属性作为精确层，并隐藏不可靠的事件层。
-- KAST 不含 traded 回合；截图没有 KAST 列，无法 fixture 校验。
+- 当前 demo 出现 bot 接管时，`player_death` 的 attacker/victim 归因会错位；程序会自动切换到计分板属性作为精确层，事件层只保留逐回合核对一致的回合（覆盖度与排除回合号会写入报告）。
+- KAST 截图没有对应列，无法 fixture 校验；traded 判定依赖事件层，同样受上面的覆盖度限制。
 - 报告仅针对单张地图；不做跨图汇总。
 - 目标选手默认 `Beneqin1`，找不到时会回退到全场 Rating 最高的选手，并在报告中提示。
+- 解析结果按 demo 的 sha256 缓存在 `cache\`，demo 未改动时直接复用；可用 `--no-cache` 跳过、`--clear-cache` 清除。
 
 详细口径、FAQ、杀软误报处理、换 awpy 版本等内容见 [README.txt](README.txt)。
 
@@ -135,8 +131,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 默认构建 onedir：
 
 ```text
-package\CS2Stats-1.1.0-onedir\
-dist\CS2Stats-1.1.0-onedir.zip
+package\CS2Stats-1.2.0-onedir\
+dist\CS2Stats-1.2.0-onedir.zip
 ```
 
 ## 项目结构
@@ -144,14 +140,15 @@ dist\CS2Stats-1.1.0-onedir.zip
 ```text
 cs2stats/
   demo_parser.py       # awpy demo 读取、正式回合过滤、事件重建
-  scoreboard.py        # demoparser2 计分板属性层与降级逻辑
+  scoreboard.py        # demoparser2 计分板属性层、逐回合核对与降级逻辑
   validation.py        # fixture 校验、ADR 取整
   report_data.py       # 报告 JSON 数据
-  rating.py            # 近似 Rating / Swing
+  rating.py            # Rating 2.0 近似 / Swing
+  cache.py             # 解析结果缓存（sha256 + 版本守卫）
   templates/           # Jinja2 单文件报告
   gui.py               # Tkinter GUI
   demo_watch.py        # demo 文件夹监听
-  first_run.py         # stat.cfg / 首次运行
+  first_run.py         # stats.cfg / 首次运行 / 旧 cfg 清理
   paths.py             # output、settings 路径
   cli.py
 run_app.py
@@ -162,7 +159,7 @@ docs/
 
 ## 开发者
 
-当前版本：**1.1.0**。变更见 [CHANGELOG.txt](CHANGELOG.txt)。
+当前版本：**1.2.0**。变更见 [CHANGELOG.txt](CHANGELOG.txt)。
 
 如果要在本项目基础上继续改进，建议先阅读 **[NEXT_MODEL_PROMPT.md](NEXT_MODEL_PROMPT.md)**：它记录了数据管线、不可破坏的约束、已知坑和验收命令。
 

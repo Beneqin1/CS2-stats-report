@@ -10,9 +10,9 @@
 
     Output:
       dist\CS2Stats\CS2Stats.exe                     (onedir)
-      dist\CS2Stats-1.1.0-onedir.zip                 (onedir download)
+      dist\CS2Stats-1.2.0-onedir.zip                 (onedir download)
       dist\CS2Stats.exe                              (onefile)
-      dist\CS2Stats-1.1.0-onefile.zip                (onefile download)
+      dist\CS2Stats-1.2.0-onefile.zip                (onefile download)
 #>
 [CmdletBinding()]
 param(
@@ -77,7 +77,7 @@ try {
         throw "PyInstaller failed with exit code $LASTEXITCODE."
     }
 
-    $PackageRoot = Join-Path $Root ("package\CS2Stats-1.1.0-" + $Mode)
+    $PackageRoot = Join-Path $Root ("package\CS2Stats-1.2.0-" + $Mode)
     if (Test-Path $PackageRoot) {
         Remove-Item -Recurse -Force $PackageRoot
     }
@@ -124,8 +124,10 @@ try {
     }
     $OutputDir = Join-Path $PackageRoot 'output'
     if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
+    $CacheDir = Join-Path $PackageRoot 'cache'
+    if (Test-Path $CacheDir) { Remove-Item -Recurse -Force $CacheDir }
 
-    $Zip = Join-Path $DistRoot ("CS2Stats-1.1.0-" + $Mode + ".zip")
+    $Zip = Join-Path $DistRoot ("CS2Stats-1.2.0-" + $Mode + ".zip")
     if (Test-Path $Zip) { Remove-Item -Force $Zip }
     Compress-Archive -Path (Join-Path $PackageRoot '*') -DestinationPath $Zip -Force
 

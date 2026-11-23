@@ -3,7 +3,7 @@
 The program keeps its mutable state next to the executable, not in a user
 profile.  For the onedir build the layout is::
 
-    CS2Stats-1.1.0-onedir/
+    CS2Stats-1.2.0-onedir/
         CS2Stats/CS2Stats.exe      <- sys.executable
         README.txt
         output/                    <- reports
