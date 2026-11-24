@@ -32,6 +32,8 @@ ErrorCallback = Callable[[str], None]
 DEFAULT_STABLE_SECONDS = 3.0
 DEFAULT_POLL_SECONDS = 1.0
 DEFAULT_LOOKBACK = 8 * 3600
+DEFAULT_MAX_ATTEMPTS = 6
+MIN_DEMO_BYTES = 16 * 1024
 
 
 def default_output_dir() -> Path:
@@ -59,6 +61,8 @@ class _Candidate:
     mtime_ns: int
     since: float
     size_announced: int | None = None
+    attempts: int = 0
+    ready_at: float = 0.0
 
 
 class DemoWatcher:
@@ -79,6 +83,7 @@ class DemoWatcher:
         allow_missing_fixture: bool = True,
         stable_seconds: float = DEFAULT_STABLE_SECONDS,
         poll_seconds: float = DEFAULT_POLL_SECONDS,
+        max_attempts: int = DEFAULT_MAX_ATTEMPTS,
         open_after: bool = True,
         state_file: str | Path | None = None,
         on_status: Status | None = None,
@@ -93,6 +98,7 @@ class DemoWatcher:
         self.allow_missing_fixture = bool(allow_missing_fixture)
         self.stable_seconds = max(1.0, float(stable_seconds))
         self.poll_seconds = max(0.2, float(poll_seconds))
+        self.max_attempts = max(1, int(max_attempts))
         self.open_after = bool(open_after)
         self.state_file = Path(state_file).expanduser() if state_file else default_state_file()
         self.on_status = on_status or (lambda message: logger.info(message) if logger else None)
@@ -245,15 +251,69 @@ class DemoWatcher:
                         candidate.size_announced = stat.st_size
                         self._status(f"文件仍在写入：{path.name}（{stat.st_size / 1024 / 1024:.1f} MB）")
                     continue
-                if now - candidate.since < self.stable_seconds:
+                if now < candidate.ready_at or now - candidate.since < self.stable_seconds:
                     continue
                 self._candidates.pop(path, None)
-                self._mark_processed(path, stat)
 
-            self._process(path)
+            if stat.st_size < MIN_DEMO_BYTES:
+                # A .dem this small cannot hold a match; it is still being
+                # created.  Do not parse it, do not error — retry later.
+                outcome = "transient"
+            else:
+                outcome = self._process(path)
+            if outcome in ("ok", "failed"):
+                # "failed" is a hard, non-retryable failure (fixture mismatch)
+                # that has already been reported; swallowing it here would
+                # retry forever, so the file is done either way.
+                self._mark_processed(path, stat)
+            else:
+                self._retry_later(path, candidate, stat)
 
     # ------------------------------------------------------------------
-    def _process(self, path: Path) -> ProcessResult | None:
+    def _retry_later(self, path: Path, candidate: _Candidate, stat: os.stat_result) -> None:
+        """Requeue a demo that failed while it may still be written.
+
+        A .dem is created (header written) when GOTV recording starts, long
+        before the match ends.  A parse error at that stage means "not a
+        complete demo yet", not "broken demo", so we back off and retry; only
+        after ``max_attempts`` failures on an unchanged file do we report an
+        error.  If the file keeps changing, the size/mtime key changes and it
+        naturally becomes a fresh candidate again.
+        """
+        attempts = candidate.attempts + 1
+        now = time.monotonic()
+        if attempts > self.max_attempts:
+            self._mark_processed(path, stat)
+            self._error(
+                f"{path.name} 重试 {self.max_attempts} 次后仍无法解析，已放弃该文件"
+                "（可能是损坏或极不完整的录制）。"
+            )
+            return
+        delay = min(5.0 * attempts, 30.0)
+        fresh = self._stat(path)
+        if fresh is None:
+            return
+        with self._lock:
+            self._candidates[path] = _Candidate(
+                fresh.st_size,
+                fresh.st_mtime_ns,
+                now,
+                attempts=attempts,
+                ready_at=now + delay,
+            )
+        self._status(
+            f"{path.name} 暂时无法解析，可能仍在写入；{delay:.0f} 秒后重试"
+            f"（第 {attempts}/{self.max_attempts} 次）"
+        )
+
+    def _process(self, path: Path) -> str:
+        """Process one stable demo; returns "ok", "transient" or "failed".
+
+        "transient" means the file is probably still being recorded and the
+        caller should retry instead of alarming the user.  "failed" is a hard
+        failure (fixture mismatch) that has already been reported and must not
+        be retried.
+        """
         self._status(f"文件已稳定，开始解析：{path.name}")
 
         def progress(stage: str, message: str) -> None:
@@ -270,15 +330,13 @@ class DemoWatcher:
             )
         except ValidationFailed as exc:
             self._error(describe_failure(exc.result))
-            return None
+            return "failed"
         except (ParseError, ValidationError) as exc:
-            self.logger.exception("demo parse/validation failed")
-            self._error(f"{path.name} 解析失败：{exc}")
-            return None
+            self.logger.info("demo not parseable yet (will retry): %s", exc)
+            return "transient"
         except Exception as exc:
             self.logger.exception("unexpected watcher error")
-            self._error(f"{path.name} 处理失败：{exc}")
-            return None
+            return "transient"
 
         self._last_report = result.report_path
         try:
@@ -290,7 +348,7 @@ class DemoWatcher:
                 webbrowser.open(result.report_path.resolve().as_uri())
             except Exception:
                 self.logger.warning("could not open browser", exc_info=True)
-        return result
+        return "ok"
 
     # ------------------------------------------------------------------
     def start(self) -> None:
@@ -360,5 +418,15 @@ class DemoWatcher:
         if self._is_processed(latest, stat):
             self._status(f"最近的 demo 已处理过，跳过：{latest.name}")
             return None
-        self._mark_processed(latest, stat)
-        return self._process(latest)
+        if stat.st_size < MIN_DEMO_BYTES:
+            self._status(f"{latest.name} 还在创建中，请等录制结束后再试。")
+            return None
+        outcome = self._process(latest)
+        if outcome == "ok":
+            self._mark_processed(latest, stat)
+            return self._last_report
+        if outcome == "failed":
+            self._mark_processed(latest, stat)
+            return None
+        self._status(f"{latest.name} 暂时无法解析，可能仍在写入；未标记为已处理，稍后重试即可。")
+        return None

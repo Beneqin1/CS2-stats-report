@@ -384,6 +384,76 @@ def _parse_rounds(raw_rows: Iterable[dict[str, Any]]) -> list[Round]:
     return rounds
 
 
+def _flag_unended_rounds(demo_path: Path, rounds: list[Round]) -> list[str]:
+    """Flag rounds that went live but never ended (truncated recording).
+
+    awpy builds its round table from round events.  When a GOTV recording
+    stops mid-round (or a bot match emits sparse round events) the events for
+    the trailing round are missing, and the report would otherwise look like a
+    short but complete match.  ``round_freeze_end`` marks the moment a round
+    goes live, so any freeze end that no parsed round claims — after the first
+    parsed round, so pre-match warm-up freezes are ignored — is evidence of a
+    round that started but never finished.  Such rounds are appended as
+    non-formal rows (``winner_side=None`` / ``still_in_progress``), which keeps
+    them out of every statistic while making the gap visible in the report.
+    """
+    if not rounds:
+        return []
+    try:
+        from demoparser2 import DemoParser
+
+        parsed_events = DemoParser(str(demo_path)).parse_events(["round_freeze_end"])
+        freeze_ticks = sorted(
+            {
+                int(tick)
+                for _, frame in parsed_events
+                for tick in frame["tick"].tolist()
+            }
+        )
+    except Exception:
+        return []
+    if not freeze_ticks:
+        return []
+    starts = [
+        tick
+        for tick in (item.start_tick or item.freeze_end_tick for item in rounds)
+        if tick is not None
+    ]
+    if not starts:
+        return []
+    first_start = min(starts)
+    covered = {item.freeze_end_tick for item in rounds if item.freeze_end_tick is not None}
+    extra = [tick for tick in freeze_ticks if tick not in covered and tick > first_start]
+    if not extra:
+        return []
+    next_num = max(item.round_num for item in rounds) + 1
+    labels: list[str] = []
+    for offset, tick in enumerate(extra):
+        rounds.append(
+            Round(
+                index=len(rounds),
+                round_num=next_num + offset,
+                start_tick=tick,
+                freeze_end_tick=tick,
+                end_tick=None,
+                official_end_tick=None,
+                winner_side=None,
+                is_knife=False,
+                reason=0,
+                reason_name="still_in_progress",
+            )
+        )
+        labels.append(f"第 {next_num + offset} 回合（tick {tick}）")
+    return [
+        "demo 录制不完整：检测到 "
+        f"{len(extra)} 个回合 freeze time 已结束、比赛已开打，但没有对应的回合结束记录——"
+        "GOTV 录制在回合进行中停止。这些回合未计入任何统计："
+        + "、".join(labels)
+        + "。如果实际对局远不止这些回合，说明 .dem 文件本身只录制了对局的一部分"
+        "（录制中断或提前停止），解析无法还原未被录制的回合。"
+    ]
+
+
 def _clean_player_name(value: Any) -> str:
     text = str(value or "").strip()
     # Keep Unicode and visible punctuation; only drop control characters and
@@ -842,6 +912,7 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
         raise ParseError("demo.stats 为空：该 demo 可能不是完整的比赛，或 awpy 无法识别。")
 
     rounds = _parse_rounds(rounds_rows)
+    recording_warnings = _flag_unended_rounds(demo_path, rounds)
     counted_rounds = [item for item in rounds if item.is_formal]
     dropped_rounds = [
         {
@@ -1455,5 +1526,13 @@ def load_demo(path: str | Path, *, check_internal: bool = True) -> ParsedDemo:
         apply_extras(parsed)
     except Exception as exc:
         parsed.side_warnings.append(f"扩展数据层未应用（{exc}）。")
+    if recording_warnings:
+        parsed.consistency_warnings.extend(recording_warnings)
+        parsed.data_quality["recording_truncation"] = {
+            "unended_rounds": [
+                item.round_num for item in parsed.rounds if not item.is_formal and item.reason_name == "still_in_progress"
+            ],
+            "message": recording_warnings[0],
+        }
     store(parsed)
     return parsed

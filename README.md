@@ -1,172 +1,122 @@
 # CS2 Stats Report
 
-**自动监听 CS2 GOTV Demo，生成 HLTV 风格的 HTML 对局数据报告。**  
-Windows 一键运行 · 无需安装 Python · 单文件 HTML 离线可看
+**本地监听 CS2 GOTV Demo，自动生成 HLTV 风格 HTML 战报的 Windows 小工具。**
 
-![报告截图](docs/report.png)
+![全板块报告截图（占位）](screenshots/report-full.png)
+> 占位：一张包含所有板块的完整报告截图（screenshots/report-full.png）
 
-## 这是什么
+## 特性
 
-`CS2Stats` 是一个 Windows 小工具：开启 GOTV 录制后，双击程序，选择 CS2 的 demo 输出目录，程序会监听新生成的 `.dem`。一局结束后，它自动解析 demo，并弹出类似 HLTV mapstats 的 HTML 报告。
+- **HLTV 风格报告**：深色底、橙白配色，Match Stats / Performance Rating / MVP 头部一应俱全
+- **Kill Matrix 击杀矩阵**：5×5 对位击杀/死亡热力表，支持 All / First kills / 残局 1vX / AWP / 手枪维度，环境/自杀归入"环境"行列
+- **Rating 分析**：KPR / DPR / KAST / Impact / ADR 分项对照表，Rating 2.0 近似公式各项可独立核对
+- **雷达图与对比**：目标选手六维雷达 + 与全场平均的条形对比
+- **Style DNA 打法风格指纹**：六维风格雷达 + 原型分类（突破手/自由人/辅助/狙击核心/Anchor）+ 与职业选手画像的相似度对标
+- **教练建议引擎**：锚定具体地图/位置/动作的规则化建议（严重度分级、数据依据可展开）
+- **高光回合定位**：自动识别残局 1vX / ACE 多杀 / ECO 翻盘等高光回合，一键复制 `playdemo` 跳转指令
+- **本地离线运行**：单文件 HTML，图表/数据全部内嵌，不联网
+- **实时监听**：监听 `replays\` 目录，打完一局自动出报告；也支持手动选择已有 `.dem`
 
-它适合：
+## 免责声明（数据口径）
 
-- 和朋友在本地服务器打完一局，想快速复盘；
-- 没有上传到第三方平台，想在本地保留一份可分享的对局报告；
-- 想把 K/D/A、ADR、KAST、首杀、击杀矩阵、雷达图放进同一个页面。
+- 本工具的 **Rating 为基于公开拟合公式的近似计算**：
+  `Rating ≈ 0.0073×KAST + 0.3591×KPR − 0.5329×DPR + 0.2372×Impact + 0.0032×ADR + 0.1587`（KAST 以百分数代入），**并非 HLTV 官方数据**。与 HLTV 官方 Rating 2.0 的偏差 **< 0.05 属正常范围**；报告附 Rating 分解表便于交叉核对。
+- **K/D/A/ADR 精确层**来自 `demoparser2` 计分板属性，并可用计分板截图 fixture 逐项校验；**KAST / Swing / MVP 为推断/近似值**，报告中均有明确标注。
+- **人机局（bot 对局）支持**：bot 与真人以 SteamID 区分聚合；检测到"玩家接管 bot"时自动清洗接管时段的事件归因，报告顶部展示"数据可信度"标签与清洗摘要。离线 bot 对局的回合事件可能不完整，本工具以 freeze time / 重生等游戏状态事件补充检测，录制不完整的回合不会计入统计，并会在报告中明确警告。
+- **非现役地图（如 cbble/cache 等）支持**：地图本身不影响解析（坐标、事件均来自 demo 本身）；但请注意 GOTV 录制可能对非现役地图不稳定——若 `.dem` 文件本身只录制了对局的一部分，报告会明确标注"录制不完整"，而不是假装对局只有一回合。
 
-## 主要功能
+## 快速开始
 
-- **自动监听**：监听 `<CS2>\game\csgo\replays\`，文件大小稳定后解析，自动打开报告。
-- **手动模式**：也可以直接选择一个已有 `.dem`。
-- **Match Stats**：K-D、+/-、K/D、K(HS)、D、A、KAST、Open Kills、ADR、Swing、Rating，支持 All / T / CT 切换。
-- **Rating 分解**：每人生成 KPR / DPR / KAST / Impact / ADR 与最终 Rating 的对照表，Rating 2.0 近似公式各项可单独核对。
-- **Performance Rating**：十名选手按 Rating 全局排序，三档颜色（优 / 中 / 差）。
-- **Kill Matrix**：逐回合与计分板差分核对，仅保留完全一致的回合；含击杀 / 死亡双视角与 All / First kills / AWP / 手枪 维度，环境 / 自杀归入“环境”行列；核对不一致的回合在报告中列明。
-- **Player Performance**：目标选手的六维雷达图 + 与全场平均的对比条形图。
-- **MVP**：头部展示本场 Rating 最高的获胜方选手。
-- **离线单文件**：Chart/ECharts、CSS、数据全部内嵌，不需要联网。
-
-## 快速开始（Windows）
-
-1. 下载 `CS2Stats-1.3.1-onedir.zip`，完整解压。
-2. 进入 `CS2Stats-1.3.1-onedir`，双击 `CS2Stats\CS2Stats.exe`。
-3. 第一次启动会自动生成 `stats.cfg`，并尝试复制到 CS2 的 `game\csgo\cfg`。
-   - 旧版本生成的 `stat.cfg` / `stat_cs2stats.cfg` 会在确认是本程序生成的内容后自动清理。
-   - 如果自动定位失败，程序会让你选择 `game\csgo\cfg` 目录。
-4. 打开 CS2 控制台，**在地图加载之前**执行：
+1. 下载并完整解压 `CS2Stats-1.3.1-onedir.zip`。
+2. 双击 `CS2Stats\CS2Stats.exe`——首次启动会**自动注入 `stats.cfg`** 到 CS2 的 `game\csgo\cfg`（定位失败时会请你手动选择目录）。
+3. 打开 CS2 控制台，**在加载地图之前**执行：
 
    ```text
    exec stats
-   ```
-
-   然后加载地图：
-
-   ```text
    map de_mirage
    ```
 
-   `tv_enable 1` / `tv_autorecord 1` 必须在地图加载前生效；中途设置对当前地图无效。
+   `tv_enable 1` / `tv_autorecord 1` 必须在地图加载前生效，中途设置对当前地图无效。
 
-5. 在程序里确认 demo 目录为：
+4. 正常打一局。
+5. 对局结束、录制文件写完后，程序**自动解析并用浏览器打开报告**（保存在 exe 根目录的 `output\report_<地图>_<时间戳>.html`）。
 
-   ```text
-   <CS2 安装目录>\game\csgo\replays
-   ```
-
-6. 开始监听。对局结束后，报告会写到程序根目录的：
-
-   ```text
-   output\report_<地图>_<时间戳>.html
-   ```
-
-   并自动用默认浏览器打开。
-
-> onedir 版本中，`stats.cfg`、`settings.json`、`output\` 都在 `CS2Stats-1.3.1-onedir\` 根目录（exe 的上一级）。  
-> onefile 版本则在 exe 同目录。
-
-## 手动解析已有 demo
+也可以手动解析已有 demo：
 
 ```powershell
 .\CS2Stats\CS2Stats.exe "D:\demos\my_match.dem"
 ```
 
-可选：
+## 技术栈与工作原理
 
-```powershell
-.\CS2Stats\CS2Stats.exe "D:\demos\my_match.dem" --fixture .\fixtures\user_mirage_20261122.fixture.json
+**技术栈**：Python 3.12 · [awpy](https://github.com/pnxenopoulos/awpy) / [demoparser2](https://github.com/LaihoE/demoparser)（demo 解析）· Tkinter（GUI）· Jinja2 + ECharts（单文件 HTML 报告）· PyInstaller（打包）
+
+**工作流程**：
+
+```text
+CS2 GOTV 录制 (.dem)
+      │
+      ▼
+awpy / demoparser2 解析 ──► 事件表 + 计分板属性
+      │
+      ▼
+分析层（demo_parser / scoreboard / extras）
+  · 正式回合过滤（含录制截断检测、bot 接管清洗）
+  · 精确层重建 + 逐回合自洽核对，不一致即降级并标注
+      │
+      ▼
+报告数据（report_data / rating / style_dna / coach / highlights）
+      │
+      ▼
+Jinja2 渲染 ──► 单文件 HTML 报告（ECharts 内嵌，离线可看）
 ```
 
-## 数据口径（重要）
+解析结果按 demo 的 SHA-256 缓存在 `cache\`，同一文件不会重复解析。
 
-这个项目把数据分成四层，HTML 底部也会写明：
-
-| 层级 | 字段 | 来源 | 说明 |
-|---|---|---|---|
-| 精确层 | Kills / Deaths / Assists / ADR | `demoparser2` 计分板属性 | 已用同一场计分板截图 fixture 逐项校验；ADR 按截图的“伤害/局”向下取整 |
-| 计分板读取 | K(HS) | `headshot_kills_total` | 计分板有值，但截图只有爆头率，未逐项 fixture 校验 |
-| 推断层 | KAST、Open Kills、Swing | 逐回合 K/A/S/D 差分 | 明确标“推断/参考”，不宣称与 HLTV 完全一致；KAST 的 traded 只计入逐回合核对一致的回合 |
-| 事件层 | Kill Matrix、A(f)、D(t) | `player_death` / 回合事件 | 逐回合与计分板差分核对，仅保留完全一致的回合进入矩阵，排除回合在报告中列明 |
-| 近似层 | Rating / Swing / MVP | Rating 2.0 近似公式 | **非 HLTV 官方数值**；报告附 Rating 分解表便于交叉核对 |
-
-已知限制：
-
-- 当前 demo 出现 bot 接管时，`player_death` 的 attacker/victim 归因会错位；程序会自动切换到计分板属性作为精确层，事件层只保留逐回合核对一致的回合（覆盖度与排除回合号会写入报告）。
-- KAST 截图没有对应列，无法 fixture 校验；traded 判定依赖事件层，同样受上面的覆盖度限制。
-- 报告仅针对单张地图；不做跨图汇总。
-- 目标选手默认 `Beneqin1`，找不到时会回退到全场 Rating 最高的选手，并在报告中提示。
-- 解析结果按 demo 的 sha256 缓存在 `cache\`，demo 未改动时直接复用；可用 `--no-cache` 跳过、`--clear-cache` 清除。
-
-详细口径、FAQ、杀软误报处理、换 awpy 版本等内容见 [README.txt](README.txt)。
-
-## 从源码运行
-
-需要 Python 3.12。
+## 本地构建
 
 ```powershell
+git clone https://github.com/Beneqin1/CS2-stats-report.git
+cd CS2-stats-report
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe run_app.py
-```
-
-命令行：
-
-```powershell
-.\.venv\Scripts\python.exe run_app.py --watch
-.\.venv\Scripts\python.exe run_app.py "D:\demos\match.dem" --fixture .\fixtures\user_mirage_20261122.fixture.json
-```
-
-校验：
-
-```powershell
-.\.venv\Scripts\python.exe validate_stats.py "D:\demos\match.dem" .\fixtures\user_mirage_20261122.fixture.json
-```
-
-## 构建 exe
-
-```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 ```
 
-默认构建 onedir：
+产物：
 
 ```text
 package\CS2Stats-1.3.1-onedir\
 dist\CS2Stats-1.3.1-onedir.zip
 ```
 
-## 项目结构
+从源码直接运行：`.\.venv\Scripts\python.exe run_app.py`（GUI）或 `run_app.py --watch`（监听）/ `run_app.py <demo>`（手动解析）。
 
-```text
-cs2stats/
-  demo_parser.py       # awpy demo 读取、正式回合过滤、事件重建
-  scoreboard.py        # demoparser2 计分板属性层、逐回合核对与降级逻辑
-  validation.py        # fixture 校验、ADR 取整
-  report_data.py       # 报告 JSON 数据
-  rating.py            # Rating 2.0 近似 / Swing
-  cache.py             # 解析结果缓存（sha256 + 版本守卫）
-  templates/           # Jinja2 单文件报告
-  gui.py               # Tkinter GUI
-  demo_watch.py        # demo 文件夹监听
-  first_run.py         # stats.cfg / 首次运行 / 旧 cfg 清理
-  paths.py             # output、settings 路径
-  cli.py
-run_app.py
-validate_stats.py
-fixtures/
-docs/
-```
+## Roadmap
 
-## 开发者
+| 功能 | 状态 |
+|---|---|
+| Kill Matrix（多维度 + 热力表） | ✅ 已实现 |
+| Rating 2.0 近似 + 分解表 | ✅ 已实现 |
+| 风格指纹 Style DNA（原型分类 + 职业选手相似度） | ✅ 已实现（画像库持续校准） |
+| 高光回合识别 + 回放跳转指令 | ✅ 已实现 |
+| 教练建议引擎（规则化、可插件化） | ✅ 已实现（规则库扩充中） |
+| Round Swing / WPA 逐回合可视化 | 🔜 规划中（数据层已就绪） |
+| 心态稳定性曲线（连败/关键回合切片） | 🔜 规划中 |
+| 位置热力图 | 💡 探索中 |
 
-当前版本：**1.3.1**。变更见 [CHANGELOG.txt](CHANGELOG.txt)。
+## 截图
 
-如果要在本项目基础上继续改进，建议先阅读 **[NEXT_MODEL_PROMPT.md](NEXT_MODEL_PROMPT.md)**：它记录了数据管线、不可破坏的约束、已知坑和验收命令。
+> 占位（`screenshots/` 目录，后续补充）：
+>
+> - `screenshots/report-full.png` — 全板块完整报告
+> - `screenshots/match-stats.png` — Match Stats
+> - `screenshots/kill-matrix.png` — Kill Matrix
+> - `screenshots/radar.png` — 雷达图与对比
+> - `screenshots/style-dna.png` — Style DNA
+> - `screenshots/gui.png` — 程序主界面
 
-## 致谢与许可
+## License
 
-- Demo 解析：[awpy](https://github.com/pnxenopoulos/awpy)、[demoparser2](https://github.com/LaihoE/demoparser)
-- HTML 图表：[ECharts](https://echarts.apache.org/)
-- 布局参考：HLTV match stats / player performance 页面
-
-项目暂未指定开源许可证。公开分发或商用前请先联系作者确认。
+MIT
