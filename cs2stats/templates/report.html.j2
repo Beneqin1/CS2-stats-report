@@ -216,7 +216,7 @@
   .perf-zones .bad { color: #ff9b9b; }
   .perf-zones .avg { color: #c9d8e5; }
   .perf-zones .good { color: #8ef0b4; }
-  .matrix-panel { max-width: 1240px; margin-left: auto; margin-right: auto; }
+  .matrix-panel { max-width: 1380px; margin-left: auto; margin-right: auto; }
   .matrix-wrap { overflow: auto; }
   .matrix-table { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 4px; }
   .matrix-table th {
@@ -242,8 +242,8 @@
   .tl-cell.tl-ct { background: rgba(108, 178, 255, .22); border-color: rgba(108, 178, 255, .45); }
   .tl-cell.tl-hl { box-shadow: 0 0 0 2px #ffd34d inset; }
   .tl-cell.tl-unreliable { opacity: .45; }
-  .hl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-  .hl-card { border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; background: rgba(255,255,255,.02); }
+  .hl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .hl-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: rgba(255,255,255,.02); }
   .hl-top { display: flex; align-items: baseline; gap: 10px; }
   .hl-round { font-size: 17px; font-weight: 800; color: #ffd34d; }
   .hl-score { font-size: 13px; font-weight: 700; }
@@ -262,24 +262,26 @@
   .hl-cmd { color: var(--faint); font-size: 10px; }
   .hl-cmd code { font-family: Consolas, monospace; }
   .tag-experimental { font-size: 10px; font-weight: 700; color: #6cb2ff; border: 1px solid rgba(108,178,255,.45); border-radius: 4px; padding: 1px 6px; vertical-align: middle; letter-spacing: .08em; }
-  .dna-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
-  #style-radar { width: 100%; height: 380px; }
-  .dna-side { display: flex; flex-direction: column; gap: 12px; }
-  .dna-archetype { display: flex; align-items: baseline; gap: 12px; }
-  .dna-label { color: var(--faint); font-size: 10px; letter-spacing: .12em; font-weight: 700; }
-  .dna-type { font-size: 22px; font-weight: 800; color: #ffd24a; }
-  .dna-summary { color: var(--muted); font-size: 13px; margin: 0; }
-  .dna-matches { display: flex; flex-direction: column; gap: 8px; }
-  .dna-match { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 10px; font-size: 12px; }
+  .dna-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 18px; align-items: stretch; }
+  .dna-sub { background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .sub-card-title { margin: 0 0 10px; color: #f5e7bd; font-size: 14px; font-weight: 700; }
+  #style-radar { width: 100%; height: 430px; }
+  .dna-side { display: flex; flex-direction: column; gap: 18px; }
+  .dna-archetype { display: flex; align-items: baseline; gap: 14px; }
+  .dna-label { color: var(--faint); font-size: 13px; letter-spacing: .12em; font-weight: 700; }
+  .dna-type { font-size: 32px; font-weight: 800; color: #ffd24a; text-shadow: 0 0 18px rgba(255,210,74,.35); }
+  .dna-summary { color: var(--text); font-size: 17px; margin: 0; }
+  .dna-matches { display: flex; flex-direction: column; gap: 14px; }
+  .dna-match { display: grid; grid-template-columns: 150px 1fr 74px; align-items: center; gap: 14px; font-size: 17px; }
   .dna-name { font-weight: 700; }
-  .dna-bar { height: 8px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
-  .dna-bar span { display: block; height: 100%; background: linear-gradient(90deg, #cc7a00, #ffd24a); border-radius: 4px; }
-  .dna-pct { text-align: right; color: #ffd24a; font-weight: 700; font-family: Consolas, monospace; }
-  .dna-raw { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--faint); font-size: 11px; line-height: 1.7; }
+  .dna-bar { height: 18px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08); border-radius: 9px; overflow: hidden; }
+  .dna-bar span { display: block; height: 100%; background: linear-gradient(90deg, #cc7a00, #ffd24a); border-radius: 9px; box-shadow: 0 0 14px rgba(255,210,74,.55); }
+  .dna-pct { text-align: right; color: #ffd24a; font-weight: 700; font-size: 19px; font-family: Consolas, monospace; }
+  .dna-raw { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 14px; line-height: 1.8; }
   .dna-raw span { border-bottom: 1px dotted var(--line); cursor: help; }
   @media (max-width: 980px) { .dna-grid { grid-template-columns: 1fr; } }
-  .coach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
-  .coach-card { border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 13px 15px; background: rgba(255,255,255,.02); }
+  .coach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+  .coach-card { border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 14px 16px; background: rgba(255,255,255,.02); }
   .coach-card.sev-high { border-left-color: #ff5d5d; }
   .coach-card.sev-medium { border-left-color: #ffc978; }
   .coach-card.sev-low { border-left-color: #6cb2ff; }
@@ -295,7 +297,7 @@
   .coach-evidence summary { cursor: pointer; color: var(--faint); font-size: 11px; }
   .coach-evidence code { display: block; margin-top: 6px; color: var(--faint); font-size: 10px; font-family: Consolas, monospace; word-break: break-all; }
   .matrix-note b { color: #c7d4df; font-weight: 600; }
-  .target-head { display: flex; align-items: baseline; gap: 12px; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+  .target-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
   .target-head .name { color: #fff; font-size: 25px; font-weight: 800; letter-spacing: -.01em; }
   .target-head .team { color: var(--muted); font-size: 12px; }
   .target-warning { border: 1px solid rgba(255,178,74,.42); background: rgba(196,120,31,.14); color: #f6dcb9; border-radius: 8px; padding: 9px 12px; font-size: 11px; line-height: 1.55; margin-bottom: 12px; }
@@ -643,8 +645,13 @@
       </div>
     </div>
     <div class="dna-grid">
-      <div id="style-radar"></div>
-      <div class="dna-side">
+      <div class="dna-sub">
+        <h3 class="sub-card-title">风格雷达</h3>
+        <div id="style-radar"></div>
+      </div>
+      <div class="dna-sub">
+        <h3 class="sub-card-title">相似度 · 原型与职业对标</h3>
+        <div class="dna-side">
         <div class="dna-archetype">
           <span class="dna-label">风格原型</span>
           <span class="dna-type">{{ report.style_dna.archetype }}</span>
@@ -668,6 +675,7 @@
           <span title="每回合道具引爆数（闪光/烟雾/手雷/燃烧弹）">道具/回合 {{ raw.utility_per_round }}</span>
           {% if raw.early_event_share is not none %}<span title="回合前 20 秒内本人击杀/死亡事件占比">前 20s 事件占比 {{ '%.0f' | format(raw.early_event_share * 100) }}%</span>{% endif %}
           {% if raw.position_dispersion_m is not none %}<span title="击杀位置相对质心的平均偏移">站位离散度 {{ raw.position_dispersion_m }}m</span>{% endif %}
+        </div>
         </div>
       </div>
     </div>
@@ -1337,7 +1345,7 @@
       tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
       radar: {
         center: ["50%", "52%"], radius: "62%", splitNumber: 4, indicator: indicator,
-        axisName: { color: "#f2e2b8", fontSize: 12, fontWeight: 600 },
+        axisName: { color: "#f2e2b8", fontSize: 14, fontWeight: 600 },
         splitArea: { areaStyle: { color: ["rgba(255,213,122,.025)", "rgba(255,213,122,.055)"] } },
         splitLine: { lineStyle: { color: "rgba(222,184,105,.42)" } },
         axisLine: { lineStyle: { color: "rgba(222,184,105,.55)" } }

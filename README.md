@@ -27,8 +27,8 @@
 
 ## 快速开始
 
-1. 下载并完整解压 `CS2Stats-1.3.1-onedir.zip`。
-2. 双击 `CS2Stats\CS2Stats.exe`——首次启动会**自动注入 `stats.cfg`** 到 CS2 的 `game\csgo\cfg`（定位失败时会请你手动选择目录）。
+1. 下载并完整解压 `CS2Stats-1.3.2-onedir.zip`。
+2. 双击解压出来的 `CS2Stats.exe`——首次启动会**自动注入 `stats.cfg`** 到 CS2 的 `game\csgo\cfg`（定位失败时会请你手动选择目录）。
 3. 打开 CS2 控制台，**在加载地图之前**执行：
 
    ```text
@@ -39,12 +39,12 @@
    `tv_enable 1` / `tv_autorecord 1` 必须在地图加载前生效，中途设置对当前地图无效。
 
 4. 正常打一局。
-5. 对局结束、录制文件写完后，程序**自动解析并用浏览器打开报告**（保存在 exe 根目录的 `output\report_<地图>_<时间戳>.html`）。
+5. 对局结束、录制文件写完后，程序**自动解析并用浏览器打开报告**（保存在 exe 同级 `output\report_<地图>_<时间戳>.html`）。
 
 也可以手动解析已有 demo：
 
 ```powershell
-.\CS2Stats\CS2Stats.exe "D:\demos\my_match.dem"
+.\CS2Stats.exe "D:\demos\my_match.dem"
 ```
 
 ## 技术栈与工作原理
@@ -84,11 +84,11 @@ python -m venv .venv
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 ```
 
-产物：
+产物（zip 为平铺结构，解压后即可看到 CS2Stats.exe）：
 
 ```text
-package\CS2Stats-1.3.1-onedir\
-dist\CS2Stats-1.3.1-onedir.zip
+package\CS2Stats-1.3.2-onedir\CS2Stats.exe
+dist\CS2Stats-1.3.2-onedir.zip
 ```
 
 从源码直接运行：`.\.venv\Scripts\python.exe run_app.py`（GUI）或 `run_app.py --watch`（监听）/ `run_app.py <demo>`（手动解析）。

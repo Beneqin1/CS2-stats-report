@@ -10,9 +10,9 @@
 
     Output:
       dist\CS2Stats\CS2Stats.exe                     (onedir)
-      dist\CS2Stats-1.3.1-onedir.zip                 (onedir download)
+      dist\CS2Stats-1.3.2-onedir.zip                 (onedir download)
       dist\CS2Stats.exe                              (onefile)
-      dist\CS2Stats-1.3.1-onefile.zip                (onefile download)
+      dist\CS2Stats-1.3.2-onefile.zip                (onefile download)
 #>
 [CmdletBinding()]
 param(
@@ -77,7 +77,7 @@ try {
         throw "PyInstaller failed with exit code $LASTEXITCODE."
     }
 
-    $PackageRoot = Join-Path $Root ("package\CS2Stats-1.3.1-" + $Mode)
+    $PackageRoot = Join-Path $Root ("package\CS2Stats-1.3.2-" + $Mode)
     if (Test-Path $PackageRoot) {
         Remove-Item -Recurse -Force $PackageRoot
     }
@@ -93,26 +93,19 @@ try {
         if (-not (Test-Path (Join-Path $AppDir 'CS2Stats.exe'))) {
             throw "Missing onedir output at $AppDir"
         }
-        Copy-Item -Recurse $AppDir (Join-Path $PackageRoot 'CS2Stats')
+        # Flat layout: CS2Stats.exe sits at the package root, so users see it
+        # immediately after extracting the zip.
+        Copy-Item -Recurse (Join-Path $AppDir '*') $PackageRoot
     }
 
+    # fixtures live next to CS2Stats.exe: find_fixture() searches the
+    # executable directory, and a user may unzip the folder anywhere.
     $FixturesOut = Join-Path $PackageRoot 'fixtures'
     New-Item -ItemType Directory -Force -Path $FixturesOut | Out-Null
     Copy-Item 'fixtures\user_dust2_20261122.fixture.json' $FixturesOut
     Copy-Item 'fixtures\user_mirage_20261122.fixture.json' $FixturesOut
     Copy-Item 'fixtures\FIXTURE_FORMAT.txt' $FixturesOut
     Copy-Item 'fixtures\user_demo.fixture.json.template' $FixturesOut
-    if (-not $OneFile) {
-        # Keep a copy next to CS2Stats.exe too: find_fixture() looks in the
-        # executable directory, and a user may unzip the folder anywhere.
-        $InnerApp = Join-Path $PackageRoot 'CS2Stats'
-        $InnerFixtures = Join-Path $InnerApp 'fixtures'
-        New-Item -ItemType Directory -Force -Path $InnerFixtures | Out-Null
-        Copy-Item 'fixtures\user_dust2_20261122.fixture.json' $InnerFixtures
-        Copy-Item 'fixtures\user_mirage_20261122.fixture.json' $InnerFixtures
-        Copy-Item 'fixtures\FIXTURE_FORMAT.txt' $InnerFixtures
-        Copy-Item 'fixtures\user_demo.fixture.json.template' $InnerFixtures
-    }
     Copy-Item 'README.txt' $PackageRoot
     Copy-Item 'CHANGELOG.txt' $PackageRoot
     Copy-Item 'validate_stats.py' $PackageRoot
@@ -127,7 +120,7 @@ try {
     $CacheDir = Join-Path $PackageRoot 'cache'
     if (Test-Path $CacheDir) { Remove-Item -Recurse -Force $CacheDir }
 
-    $Zip = Join-Path $DistRoot ("CS2Stats-1.3.1-" + $Mode + ".zip")
+    $Zip = Join-Path $DistRoot ("CS2Stats-1.3.2-" + $Mode + ".zip")
     if (Test-Path $Zip) { Remove-Item -Force $Zip }
     Compress-Archive -Path (Join-Path $PackageRoot '*') -DestinationPath $Zip -Force
 
@@ -135,12 +128,7 @@ try {
     Write-Host "Build complete." -ForegroundColor Green
     Write-Host "  Package: $PackageRoot"
     Write-Host "  Zip:     $Zip"
-    if ($OneFile) {
-        Write-Host "  Exe:     $(Join-Path $PackageRoot 'CS2Stats.exe')"
-    }
-    else {
-        Write-Host "  Exe:     $(Join-Path $PackageRoot 'CS2Stats\CS2Stats.exe')"
-    }
+    Write-Host "  Exe:     $(Join-Path $PackageRoot 'CS2Stats.exe')"
 }
 finally {
     Pop-Location

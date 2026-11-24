@@ -1,4 +1,4 @@
-CS2 数据报告 1.3.1
+CS2 数据报告 1.3.2
 ======================================================================
 把一张地图的 CS2 .dem 解析成 HLTV 风格的 HTML 报告。
 
@@ -12,26 +12,26 @@ CS2 数据报告 1.3.1
 
 一、自动监听 Demo（默认模式）
 ----------------------------------------------------------------------
-1. 解压 onedir 压缩包，进入 CS2Stats 文件夹，双击 CS2Stats.exe。
-   默认标签页是“自动监听 Demo（默认）”。
+1. 解压 onedir 压缩包，直接双击解压出来的 CS2Stats.exe（zip 为平铺结构，
+   exe 就在第一层）。默认标签页是“自动监听（推荐）”。
 
 2. 第一次启动会自动生成 stats.cfg 并尝试复制到 CS2 的 cfg 目录。
-   - 文件位置：CS2Stats-1.3.1-onedir\stats.cfg（onedir 中在 exe 的上一级；
-     onefile 中与 exe 同级）。
+   - 文件位置：exe 同级的 stats.cfg（onedir 平铺结构中与 CS2Stats.exe 同级；
+     onefile 中同样与 exe 同级）。
    - 旧版本生成的 stat.cfg / stat_cs2stats.cfg，在确认是本程序生成的
      内容后会自动清理，避免旧文件残留。
    - 自动定位失败会弹出目录选择；取消后主界面仍保留“配置 stats.cfg…”按钮。
    - 开图前在 CS2 控制台执行提示的命令（exec stats）。
    详见下面第二节。
 
-3. “Demo 输出目录”默认指向 CS2 的 game\csgo\replays 目录，例如：
+3. “Demo 录像文件夹”默认自动补全为 CS2 的 game\csgo\replays 目录，例如：
        D:\program files\steam\steamapps\common\
        Counter-Strike Global Offensive\game\csgo\replays
    程序自动定位；找不到时点“浏览…”选择，并会记住到 exe 同级的 settings.json。
    如果 replays 目录还不存在，首次开图后 CS2 会自动创建，程序不会乱建目录。
 
-4. “报告输出目录”固定为程序根目录的 output\，例如：
-       CS2Stats-1.3.1-onedir\output\
+4. “报告保存到”固定为程序根目录的 output\（与 exe 同级），例如：
+       CS2Stats-1.3.2-onedir\output\
    对局结束、demo 解析完成后，程序在这里生成
        report_<地图>_<日期>_<时间>.html
    并用默认浏览器自动打开。目录不存在时程序自动创建。
@@ -77,7 +77,7 @@ GOTV 录的是整场 demo，解析出来自然包含全部 10 人，不需要 sp
         exec stats
   - 自动定位失败时，主界面有“配置 stats.cfg…”按钮，手动选择 game\csgo\cfg。
     也可以把 exe 同级的 stats.cfg 手动复制过去。
-  - 高级/兼容：主界面“高级 / GOTV 配置”仍可生成 cs2stats_gotv.cfg，
+  - 高级/兼容：主界面“高级：GOTV 录像设置”仍可生成 cs2stats_gotv.cfg，
     用于不想使用 stats.cfg 的情况；执行 exec cs2stats_gotv。
 
 注意：程序不会在你已经进入地图后偷偷改 tv_enable；配置只负责把命令写好，

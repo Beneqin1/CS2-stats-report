@@ -151,7 +151,3 @@ def describe_failure(result: ValidationResult, max_differences: int = 12) -> str
         lines.append("")
         lines.append("未生成 report.html。请勿跳过校验；先修正差异。")
     return "\n".join(lines)
-
-
-def find_default_output(demo_path: str | Path | None = None) -> Path:
-    return app_output_dir()
