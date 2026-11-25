@@ -37,14 +37,18 @@ from .validation import ValidationError, ValidationFailed
 LOGGER = logging.getLogger(__name__)
 
 
-BG = "#f7f8fa"
-PANEL = "#ffffff"
-FIELD = "#ffffff"
-TEXT = "#1f2329"
-MUTED = "#6b7280"
-ORANGE = "#f76b15"
+# Design tokens — HLTV dark theme. Change colors here only.
+BG = "#14161b"           # window background
+PANEL = "#1d2027"        # card background
+FIELD = "#23262f"        # entry background
+TEXT = "#e8eaed"         # primary text
+SUBTLE = "#c9ced6"       # field labels
+MUTED = "#8b93a1"        # hints / secondary text
+ORANGE = "#f26a21"       # accent
+ORANGE_HOVER = "#ff8a47"
 ORANGE_DARK = "#c2410c"
-LINE = "#e3e6ea"
+LINE = "#2a2e38"         # separators / borders
+FONT = "Microsoft YaHei UI"
 
 
 def _set_theme(root: Tk) -> None:
@@ -56,66 +60,80 @@ def _set_theme(root: Tk) -> None:
         except Exception:
             continue
     root.configure(bg=BG)
-    body = ("Microsoft YaHei UI", 15)
+    body = (FONT, 15)
     style.configure(".", font=body, background=BG, foreground=TEXT)
     style.configure("TFrame", background=BG)
+    style.configure("Card.TFrame", background=PANEL)
     style.configure("TLabel", background=BG, foreground=TEXT)
+    style.configure("Card.TLabel", background=PANEL, foreground=TEXT)
     style.configure(
         "TButton",
         font=body,
         padding=(16, 10),
-        background=PANEL,
+        background="#262a33",
         foreground=TEXT,
         bordercolor=LINE,
         focuscolor=ORANGE,
     )
     style.map(
         "TButton",
-        background=[("disabled", "#eceef1"), ("pressed", ORANGE_DARK), ("active", "#eef1f4")],
-        foreground=[("disabled", "#9aa3ad")],
+        background=[("disabled", "#20232b"), ("pressed", ORANGE_DARK), ("active", "#323844")],
+        foreground=[("disabled", "#5c6470")],
     )
     style.configure(
         "Go.TButton",
-        font=("Microsoft YaHei UI", 17, "bold"),
-        padding=(22, 13),
+        font=(FONT, 17, "bold"),
+        padding=(20, 11),
         background=ORANGE,
         foreground="#ffffff",
     )
     style.map(
         "Go.TButton",
-        background=[("disabled", "#f9c9a8"), ("pressed", ORANGE_DARK), ("active", "#ff8a47")],
-        foreground=[("disabled", "#ffffff")],
+        background=[("disabled", "#3a3e47"), ("pressed", ORANGE_DARK), ("active", ORANGE_HOVER)],
+        foreground=[("disabled", "#7a818d")],
     )
     style.configure(
         "TEntry",
         font=body,
-        padding=8,
+        padding=9,
         fieldbackground=FIELD,
         foreground=TEXT,
         bordercolor=LINE,
         insertcolor=TEXT,
     )
-    style.configure("TCheckbutton", font=body, background=BG, foreground=TEXT, padding=(2, 4))
     style.map(
-        "TCheckbutton",
-        background=[("active", BG)],
-        foreground=[("active", "#111418")],
+        "TEntry",
+        fieldbackground=[("readonly", FIELD), ("disabled", FIELD)],
+        foreground=[("readonly", MUTED)],
     )
-    style.configure("TNotebook", background=BG, bordercolor=LINE)
-    style.configure("TNotebook.Tab", font=body, padding=(20, 12), background="#eceef1", foreground=MUTED)
+    style.configure("TCheckbutton", font=body, background=BG, foreground=TEXT, padding=(2, 4))
+    style.map("TCheckbutton", background=[("active", BG)], foreground=[("active", "#ffffff")])
+    style.configure("Card.TCheckbutton", font=body, background=PANEL, foreground=TEXT, padding=(2, 4))
+    style.map(
+        "Card.TCheckbutton",
+        background=[("active", PANEL)],
+        foreground=[("active", "#ffffff")],
+    )
+    style.configure("TNotebook", background=BG, bordercolor=BG)
+    style.configure("TNotebook.Tab", font=body, padding=(18, 10), background="#1b1e25", foreground=MUTED)
     style.map(
         "TNotebook.Tab",
-        background=[("selected", PANEL)],
-        foreground=[("selected", TEXT)],
+        background=[("selected", BG)],
+        foreground=[("selected", "#ffffff")],
     )
     style.configure("TSeparator", background=LINE)
-    style.configure("TProgressbar", background=ORANGE, troughcolor="#eceef1", bordercolor=LINE)
-    style.configure("Title.TLabel", font=("Microsoft YaHei UI", 30, "bold"), foreground=TEXT)
-    style.configure("Accent.TLabel", font=("Microsoft YaHei UI", 15, "bold"), foreground=ORANGE_DARK)
+    style.configure("TProgressbar", background=ORANGE, troughcolor="#22252d", bordercolor=BG, thickness=8)
+    style.configure("Title.TLabel", font=(FONT, 26, "bold"), foreground="#ffffff")
+    style.configure("DlgTitle.TLabel", font=(FONT, 20, "bold"), foreground="#ffffff")
+    style.configure("Section.TLabel", font=(FONT, 17, "bold"), foreground="#ffffff", background=PANEL)
     style.configure("Sub.TLabel", font=body, foreground=MUTED)
-    style.configure("Field.TLabel", font=body, foreground="#374151")
-    style.configure("Hint.TLabel", font=("Microsoft YaHei UI", 13), foreground=MUTED)
-    style.configure("Live.TLabel", font=("Microsoft YaHei UI", 14, "bold"), foreground=ORANGE_DARK)
+    style.configure("CardSub.TLabel", font=body, foreground=MUTED, background=PANEL)
+    style.configure("Field.TLabel", font=body, foreground=SUBTLE)
+    style.configure("CardField.TLabel", font=body, foreground=SUBTLE, background=PANEL)
+    style.configure("Hint.TLabel", font=(FONT, 13), foreground=MUTED)
+    style.configure("CardHint.TLabel", font=(FONT, 13), foreground=MUTED, background=PANEL)
+    style.configure("CardAccent.TLabel", font=(FONT, 14, "bold"), foreground=ORANGE_HOVER, background=PANEL)
+    style.configure("Live.TLabel", font=(FONT, 14, "bold"), foreground=ORANGE_HOVER)
 
 
 def _dpi_aware() -> None:
@@ -129,7 +147,7 @@ def _dpi_aware() -> None:
 
 class DemoWatchPanel(ttk.Frame):
     def __init__(self, master) -> None:
-        super().__init__(master, padding=(22, 18))
+        super().__init__(master, padding=(22, 8))
         settings = load_settings()
         saved = Path(settings["replays_dir"]) if settings.get("replays_dir") else None
         detected = saved if saved and saved.exists() else default_demo_dir()
@@ -140,10 +158,7 @@ class DemoWatchPanel(ttk.Frame):
         self.fixture_var = StringVar(value="")
         self.gotv_status_var = StringVar(value="")
         self.stat_status_var = StringVar(value="")
-        self.status_var = StringVar(
-            value="第 1 步：确认下方 demo 录像文件夹 → 第 2 步：点“开始监听” → "
-            "然后去 CS2 控制台输入 exec stats，进图开打，打完自动出报告。"
-        )
+        self.status_var = StringVar(value="就绪：确认你的游戏 ID，然后点击“开始监听”。")
         self.open_after_var = BooleanVar(value=True)
         self.allow_missing_var = BooleanVar(value=True)
         self.watcher: DemoWatcher | None = None
@@ -156,77 +171,104 @@ class DemoWatchPanel(ttk.Frame):
 
     # ------------------------------------------------------------------
     def _build(self) -> None:
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
         ttk.Label(self, text="自动监听 · 打完一局自动出报告", style="Title.TLabel").grid(
-            row=0, column=0, columnspan=3, sticky=W, pady=(0, 6)
-        )
-        ttk.Label(
-            self,
-            text="使用流程：① 开图前在 CS2 控制台输入 exec stats → ② 回到这里点“开始监听” → ③ 正常打一局 → 报告自动打开。",
-            style="Sub.TLabel",
-            wraplength=960,
-            justify=LEFT,
-        ).grid(row=1, column=0, columnspan=3, sticky=W, pady=(0, 14))
-
-        ttk.Label(self, text="Demo 录像文件夹", style="Field.TLabel").grid(row=2, column=0, sticky=W, pady=6)
-        ttk.Entry(self, textvariable=self.watch_var).grid(
-            row=2, column=1, sticky=(E, W), padx=(12, 8), pady=6
-        )
-        ttk.Button(self, text="浏览…", command=self._choose_watch).grid(row=2, column=2, sticky=E, pady=6)
-
-        ttk.Label(self, text="报告保存到", style="Field.TLabel").grid(row=3, column=0, sticky=W, pady=6)
-        ttk.Entry(self, textvariable=self.out_var, state="readonly").grid(
-            row=3, column=1, sticky=(E, W), padx=(12, 8), pady=6
-        )
-        ttk.Button(self, text="打开", command=self._open_output_dir).grid(row=3, column=2, sticky=E, pady=6)
-
-        ttk.Label(self, text="你的游戏 ID", style="Field.TLabel").grid(row=4, column=0, sticky=W, pady=6)
-        ttk.Entry(self, textvariable=self.target_var, width=28).grid(
-            row=4, column=1, columnspan=2, sticky=W, padx=(12, 8), pady=6
+            row=0, column=0, sticky=W, pady=(0, 12)
         )
 
-        ttk.Label(self, text="计分板校验文件", style="Field.TLabel").grid(row=5, column=0, sticky=W, pady=6)
-        ttk.Entry(self, textvariable=self.fixture_var).grid(
-            row=5, column=1, sticky=(E, W), padx=(12, 8), pady=6
+        id_row = ttk.Frame(self)
+        id_row.grid(row=1, column=0, sticky=(E, W), pady=(0, 10))
+        ttk.Label(id_row, text="你的游戏 ID", style="Field.TLabel").pack(side="left")
+        ttk.Entry(
+            id_row, textvariable=self.target_var, width=18, font=(FONT, 16, "bold")
+        ).pack(side="left", padx=(12, 0))
+        ttk.Label(id_row, text="报告会把你高亮为主角", style="Hint.TLabel").pack(
+            side="left", padx=(12, 0)
         )
-        ttk.Button(self, text="浏览…", command=self._choose_fixture).grid(row=5, column=2, sticky=E, pady=6)
 
-        ttk.Checkbutton(
-            self,
-            text="找不到校验文件也照常生成（报告会标注“未校验”，一般保持勾选即可）",
-            variable=self.allow_missing_var,
-        ).grid(row=6, column=1, columnspan=2, sticky=W, padx=(12, 0), pady=(4, 0))
-
-        ttk.Separator(self).grid(row=7, column=0, columnspan=3, sticky=(E, W), pady=14)
+        ttk.Separator(self).grid(row=2, column=0, sticky=(E, W), pady=(0, 8))
 
         buttons = ttk.Frame(self)
-        buttons.grid(row=8, column=0, columnspan=3, sticky=(E, W))
+        buttons.grid(row=3, column=0, sticky=(E, W))
         self.start_button = ttk.Button(buttons, text="开始监听", style="Go.TButton", command=self._start)
         self.start_button.pack(side="left")
         self.stop_button = ttk.Button(buttons, text="停止监听", command=self._stop, state="disabled")
         self.stop_button.pack(side="left", padx=(8, 0))
         self.open_button = ttk.Button(buttons, text="打开最近报告", command=self._open_latest, state="disabled")
         self.open_button.pack(side="left", padx=(8, 0))
-        ttk.Button(buttons, text="高级：GOTV 录像设置", command=self._open_gotv_dialog).pack(side="left", padx=(8, 0))
         ttk.Checkbutton(buttons, text="生成后自动打开", variable=self.open_after_var).pack(side="right")
 
         self.progress = ttk.Progressbar(self, mode="determinate", maximum=100, value=0)
-        self.progress.grid(row=9, column=0, columnspan=3, sticky=(E, W), pady=(12, 4))
-        ttk.Label(self, textvariable=self.status_var, style="Field.TLabel", wraplength=980).grid(
-            row=10, column=0, columnspan=3, sticky=W, pady=(2, 0)
+        self.progress.grid(row=4, column=0, sticky=(E, W), pady=(10, 6))
+        ttk.Label(self, textvariable=self.status_var, style="Live.TLabel", wraplength=1060).grid(
+            row=5, column=0, sticky=W
         )
 
-        stat_row = ttk.Frame(self)
-        stat_row.grid(row=11, column=0, columnspan=3, sticky=(E, W), pady=(10, 0))
-        ttk.Button(stat_row, text="配置 stats.cfg…", command=self._manual_stat_setup).pack(side="left")
+        flow = ttk.Frame(self, style="Card.TFrame", padding=12)
+        flow.grid(row=6, column=0, sticky=(E, W), pady=(10, 0))
+        flow.columnconfigure(0, weight=1)
+        ttk.Label(flow, text="使用流程", style="Section.TLabel").grid(row=0, column=0, sticky=W)
         ttk.Label(
-            stat_row,
+            flow,
+            text="1. 打开游戏，在控制台输入 exec stats（初次使用请到下方“高级设置”点击“配置 .cfg”）",
+            style="Card.TLabel",
+        ).grid(row=1, column=0, sticky=W, pady=(6, 0))
+        ttk.Label(
+            flow,
+            text="2. 正常进行游戏，对局结束自动生成并弹出对局报告",
+            style="Card.TLabel",
+        ).grid(row=2, column=0, sticky=W, pady=(2, 0))
+
+        adv = ttk.Frame(self, style="Card.TFrame", padding=12)
+        adv.grid(row=7, column=0, sticky=(E, W), pady=(10, 0))
+        adv.columnconfigure(1, weight=1)
+        ttk.Label(adv, text="高级设置", style="Section.TLabel").grid(row=0, column=0, sticky=W)
+        ttk.Label(
+            adv, text=".dem 一般在 csgo 目录下的 replays 文件夹", style="CardSub.TLabel"
+        ).grid(row=0, column=1, columnspan=2, sticky=W, padx=(16, 0), pady=(4, 0))
+
+        ttk.Label(adv, text="Demo 录像文件夹", style="CardField.TLabel").grid(
+            row=1, column=0, sticky=W, pady=(8, 0)
+        )
+        ttk.Entry(adv, textvariable=self.watch_var).grid(
+            row=1, column=1, sticky=(E, W), padx=(12, 8), pady=(8, 0)
+        )
+        ttk.Button(adv, text="浏览…", command=self._choose_watch).grid(
+            row=1, column=2, sticky=E, pady=(8, 0)
+        )
+
+        ttk.Label(adv, text="报告保存到", style="CardField.TLabel").grid(row=2, column=0, sticky=W, pady=(4, 0))
+        ttk.Entry(adv, textvariable=self.out_var, state="readonly").grid(
+            row=2, column=1, sticky=(E, W), padx=(12, 8), pady=(4, 0)
+        )
+        ttk.Button(adv, text="打开", command=self._open_output_dir).grid(row=2, column=2, sticky=E, pady=(4, 0))
+
+        ttk.Label(adv, text="计分板校验文件", style="CardField.TLabel").grid(row=3, column=0, sticky=W, pady=(4, 0))
+        ttk.Entry(adv, textvariable=self.fixture_var).grid(
+            row=3, column=1, sticky=(E, W), padx=(12, 8), pady=(4, 0)
+        )
+        ttk.Button(adv, text="浏览…", command=self._choose_fixture).grid(row=3, column=2, sticky=E, pady=(4, 0))
+
+        ttk.Separator(adv).grid(row=4, column=0, columnspan=3, sticky=(E, W), pady=(8, 6))
+
+        bottom = ttk.Frame(adv, style="Card.TFrame")
+        bottom.grid(row=5, column=0, columnspan=3, sticky=(E, W))
+        ttk.Button(bottom, text="配置 .cfg", command=self._manual_stat_setup).pack(side="left")
+        ttk.Label(
+            bottom,
             textvariable=self.stat_status_var,
-            style="Hint.TLabel",
-            wraplength=680,
+            style="CardAccent.TLabel",
+            wraplength=460,
             justify="left",
-        ).pack(side="left", padx=(10, 0))
+        ).pack(side="left", padx=(12, 0))
+        ttk.Button(bottom, text="GOTV 设置…", command=self._open_gotv_dialog).pack(side="left", padx=(16, 0))
+        ttk.Checkbutton(
+            bottom,
+            text="找不到校验文件也照常生成",
+            variable=self.allow_missing_var,
+            style="Card.TCheckbutton",
+        ).pack(side="right")
 
     def _open_gotv_dialog(self) -> None:
         win = Toplevel(self)
@@ -234,12 +276,12 @@ class DemoWatchPanel(ttk.Frame):
         win.configure(bg=BG)
         win.transient(self.winfo_toplevel())
         win.grab_set()
-        win.geometry("640x300")
+        win.geometry("680x340")
         body = ttk.Frame(win, padding=16)
         body.pack(fill="both", expand=True)
         body.columnconfigure(0, weight=1)
-        ttk.Label(body, text="GOTV 配置", style="Title.TLabel").grid(row=0, column=0, sticky=W)
-        ttk.Label(body, textvariable=self.gotv_status_var, style="Field.TLabel", wraplength=590).grid(
+        ttk.Label(body, text="GOTV 配置", style="DlgTitle.TLabel").grid(row=0, column=0, sticky=W)
+        ttk.Label(body, textvariable=self.gotv_status_var, style="Field.TLabel", wraplength=620).grid(
             row=1, column=0, sticky=W, pady=(10, 8)
         )
         row = ttk.Frame(body)
@@ -326,13 +368,9 @@ class DemoWatchPanel(ttk.Frame):
         target = settings.get("stat_cfg_target") or ""
         command = settings.get("stat_cfg_command") or ""
         if target and command:
-            self.stat_status_var.set(
-                f"stats.cfg 已就绪：{target}\n开图前在控制台执行：{command}"
-            )
+            self.stat_status_var.set("stats.cfg 已就绪")
         else:
-            self.stat_status_var.set(
-                "stats.cfg 尚未复制到 CS2：点击左侧按钮选择 game\\csgo\\cfg。"
-            )
+            self.stat_status_var.set("stats.cfg 未配置：点击“配置 .cfg”选择 game\\csgo\\cfg")
 
     def _manual_stat_setup(self) -> None:
         path = filedialog.askdirectory(
@@ -477,7 +515,7 @@ class DemoWatchPanel(ttk.Frame):
 
 class DemoPanel(ttk.Frame):
     def __init__(self, master) -> None:
-        super().__init__(master, padding=(22, 18))
+        super().__init__(master, padding=(22, 8))
         self.demo_var = StringVar()
         self.target_var = StringVar(value=TARGET_DEFAULT)
         self.fixture_var = StringVar()
@@ -490,75 +528,71 @@ class DemoPanel(ttk.Frame):
         self.after(120, self._poll_queue)
 
     def _build(self) -> None:
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
         ttk.Label(self, text="手动解析 · 单个 Demo 出报告", style="Title.TLabel").grid(
-            row=0, column=0, columnspan=3, sticky=W
+            row=0, column=0, sticky=W
         )
         ttk.Label(
             self,
-            text="选好 .dem 点“开始生成报告”即可；报告统一保存到程序同级的 output 文件夹。",
+            text=".dem 一般在 csgo 目录下的 replays 文件夹；报告统一保存到程序同级的 output 文件夹。",
             style="Sub.TLabel",
-        ).grid(row=1, column=0, columnspan=3, sticky=W, pady=(4, 18))
+        ).grid(row=1, column=0, sticky=W, pady=(4, 12))
 
-        ttk.Label(self, text="Demo 文件（.dem）", style="Field.TLabel").grid(row=2, column=0, sticky=W, pady=4)
-        ttk.Entry(self, textvariable=self.demo_var).grid(
-            row=2, column=1, sticky=(E, W), padx=(12, 8), pady=4
-        )
-        ttk.Button(self, text="浏览…", command=self._choose_demo).grid(row=2, column=2, sticky=E, pady=4)
+        card = ttk.Frame(self, style="Card.TFrame", padding=12)
+        card.grid(row=2, column=0, sticky=(E, W))
+        card.columnconfigure(1, weight=1)
 
-        ttk.Label(self, text="你的游戏 ID", style="Field.TLabel").grid(row=3, column=0, sticky=W, pady=4)
-        ttk.Entry(self, textvariable=self.target_var, width=28).grid(
-            row=3, column=1, columnspan=2, sticky=W, padx=(12, 8), pady=4
+        ttk.Label(card, text="你的游戏 ID", style="CardField.TLabel").grid(row=0, column=0, sticky=W)
+        ttk.Entry(card, textvariable=self.target_var, width=18, font=(FONT, 16, "bold")).grid(
+            row=0, column=1, columnspan=2, sticky=W, padx=(12, 0)
         )
+
+        ttk.Label(card, text="Demo 文件（.dem）", style="CardField.TLabel").grid(
+            row=1, column=0, sticky=W, pady=(12, 0)
+        )
+        ttk.Entry(card, textvariable=self.demo_var).grid(
+            row=1, column=1, sticky=(E, W), padx=(12, 8), pady=(12, 0)
+        )
+        ttk.Button(card, text="浏览…", command=self._choose_demo).grid(row=1, column=2, sticky=E, pady=(12, 0))
+
+        ttk.Label(card, text="计分板校验文件", style="CardField.TLabel").grid(
+            row=2, column=0, sticky=W, pady=(12, 0)
+        )
+        ttk.Entry(card, textvariable=self.fixture_var).grid(
+            row=2, column=1, sticky=(E, W), padx=(12, 8), pady=(12, 0)
+        )
+        ttk.Button(card, text="浏览…", command=self._choose_fixture).grid(row=2, column=2, sticky=E, pady=(12, 0))
         ttk.Label(
-            self,
-            text="报告会把你高亮为主角；找不到时自动用全场 Rating 最高的选手。",
-            style="Hint.TLabel",
-        ).grid(row=4, column=1, columnspan=2, sticky=W, padx=(12, 0))
-
-        ttk.Label(self, text="计分板校验文件", style="Field.TLabel").grid(row=5, column=0, sticky=W, pady=4)
-        ttk.Entry(self, textvariable=self.fixture_var).grid(
-            row=5, column=1, sticky=(E, W), padx=(12, 8), pady=4
-        )
-        ttk.Button(self, text="浏览…", command=self._choose_fixture).grid(row=5, column=2, sticky=E, pady=4)
-        ttk.Label(
-            self,
-            text="可留空：会自动在 fixtures/ 里按 demo 指纹查找；找不到也照常生成（报告标注“未校验”），找到但不一致会停止生成。",
-            style="Hint.TLabel",
-            wraplength=880,
+            card,
+            text="可留空：会自动在 fixtures/ 里按 demo 指纹查找；找不到照常生成（标注“未校验”），找到但不一致会停止生成。",
+            style="CardHint.TLabel",
+            wraplength=860,
             justify=LEFT,
-        ).grid(row=6, column=1, columnspan=2, sticky=W, padx=(12, 0))
+        ).grid(row=3, column=1, columnspan=2, sticky=W, padx=(12, 0), pady=(6, 0))
 
-        ttk.Label(self, text="报告保存到", style="Field.TLabel").grid(row=7, column=0, sticky=W, pady=4)
-        ttk.Entry(self, textvariable=self.out_var, state="readonly").grid(
-            row=7, column=1, columnspan=2, sticky=(E, W), padx=(12, 0), pady=4
-        )
-
-        ttk.Separator(self).grid(row=8, column=0, columnspan=3, sticky=(E, W), pady=14)
-
-        self.go_button = ttk.Button(self, text="开始生成报告", style="Go.TButton", command=self._start)
-        self.go_button.grid(row=9, column=1, sticky=W, padx=(12, 0), pady=(0, 6))
-        ttk.Checkbutton(self, text="生成后打开报告", variable=self.open_after_var).grid(
-            row=9, column=2, sticky=E, pady=(0, 6)
-        )
+        actions = ttk.Frame(self)
+        actions.grid(row=3, column=0, sticky=(E, W), pady=(12, 0))
+        self.go_button = ttk.Button(actions, text="开始生成报告", style="Go.TButton", command=self._start)
+        self.go_button.pack(side="left")
+        ttk.Checkbutton(actions, text="生成后打开报告", variable=self.open_after_var).pack(side="right")
 
         self.progress = ttk.Progressbar(self, mode="determinate", maximum=100)
-        self.progress.grid(row=10, column=0, columnspan=3, sticky=(E, W), pady=(8, 4))
-        ttk.Label(self, textvariable=self.status_var, style="Field.TLabel", wraplength=760).grid(
-            row=11, column=0, columnspan=3, sticky=W, pady=(2, 0)
+        self.progress.grid(row=4, column=0, sticky=(E, W), pady=(10, 6))
+        ttk.Label(self, textvariable=self.status_var, style="Live.TLabel", wraplength=1000).grid(
+            row=5, column=0, sticky=W
         )
 
         ttk.Label(
             self,
             text=(
                 "精确层：K/D/A、ADR、K (HS) 来自 demoparser2 计分板属性，生成前会对照 fixture（如果找到）；"
-                "找出差异会停止生成，没有 fixture 则生成标“未校验”的报告。KAST 为推断，"
-                "Open Kills 为参考字段；Kill Matrix 只覆盖逐回合核对一致的回合；Rating / Swing 为近似值。"
+                "KAST 为推断，Open Kills 为参考字段；Kill Matrix 只覆盖逐回合核对一致的回合；"
+                "Rating / Swing 为近似值。"
             ),
             style="Hint.TLabel",
-            wraplength=760,
-        ).grid(row=12, column=0, columnspan=3, sticky=W, pady=(18, 0))
+            wraplength=1000,
+        ).grid(row=6, column=0, sticky=W, pady=(16, 0))
 
     def _choose_demo(self) -> None:
         start_dir = str(load_settings().get("replays_dir") or "")
@@ -691,8 +725,8 @@ class AppWindow:
         _dpi_aware()
         self.root = Tk()
         self.root.title(f"{APP_NAME} {APP_VERSION}")
-        self.root.geometry("1180x920")
-        self.root.minsize(1040, 840)
+        self.root.geometry("1180x780")
+        self.root.minsize(1080, 760)
         _set_theme(self.root)
         self._build()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -700,14 +734,14 @@ class AppWindow:
         # Make sure the enlarged fonts never start clipped: grow the window
         # to the content's required size when it exceeds the default.
         self.root.update_idletasks()
-        req_w = self.root.winfo_reqwidth() + 28
-        req_h = self.root.winfo_reqheight() + 28
-        if req_w > 1180 or req_h > 920:
-            self.root.geometry(f"{max(1180, req_w)}x{max(920, req_h)}")
+        req_w = self.root.winfo_reqwidth() + 16
+        req_h = self.root.winfo_reqheight() + 16
+        if req_w > 1180 or req_h > 780:
+            self.root.geometry(f"{max(1180, req_w)}x{max(780, req_h)}")
 
     def _build(self) -> None:
         notebook = ttk.Notebook(self.root)
-        notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        notebook.pack(fill="both", expand=True, padx=6, pady=6)
         self.watcher = DemoWatchPanel(notebook)
         self.demo = DemoPanel(notebook)
         notebook.add(self.watcher, text="自动监听（推荐）")

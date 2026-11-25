@@ -310,7 +310,22 @@
   }
   .radar-panel h3, .compare-panel h3 { margin: 0; color: #f5e7bd; font-size: 14px; font-weight: 700; }
   .radar-panel .panel-sub, .compare-panel .panel-sub { color: #b8aa88; }
-  #radar-chart { width: 100%; height: 430px; margin-top: 2px; }
+  #radar-chart { width: 100%; height: 430px; margin-top: 2px; position: relative; overflow: visible; }
+  .radar-panel, .player-grid { overflow: visible; }
+  .burst-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  .burst-label { position: absolute; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; }
+  .burst-name { display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #f2e2b8; text-shadow: 0 0 8px rgba(0,0,0,.75); }
+  .burst-name .zh { color: #b8a887; font-size: 9px; font-weight: 600; letter-spacing: 0; margin-left: 4px; }
+  .burst-num {
+    display: block; font-size: 26px; font-weight: 800; font-style: italic; line-height: 1.05;
+    color: #ffe9a8;
+    text-shadow: 0 0 10px rgba(255, 208, 84, .95), 0 0 26px rgba(255, 178, 40, .65), 0 2px 6px rgba(0, 0, 0, .6);
+  }
+  .burst-tag {
+    display: block; font-size: 11px; font-weight: 700; font-style: italic; letter-spacing: 1.5px;
+    color: #e8c96a; text-shadow: 0 0 8px rgba(255, 190, 60, .8);
+  }
+  .radar-scale-note { color: #9a8d6d; font-size: 10px; margin-top: 2px; text-align: center; }
   .player-grid.solo .radar-panel, .player-grid.solo .compare-panel { display: none; }
   .solo-callout { margin: 6px 0 14px; }
   .radar-legend { display: flex; justify-content: center; gap: 18px; color: #d8c9a2; font-size: 10px; margin-top: 2px; }
@@ -624,6 +639,7 @@
           <span><i class="legend-line gold"></i>玩家</span>
           <span><i class="legend-line red"></i>全场平均</span>
         </div>
+        <div class="radar-scale-note">刻度固定：中环 = 职业均值基准，外环 = 2× 基准；顶点超出外环为“爆表”，金色发光 + 大数字标注。</div>
       </div>
       <div class="panel compare-panel">
         <div class="panel-head">
@@ -1153,19 +1169,33 @@
       return;
     }
     if (!radarChart) radarChart = echarts.init(host);
-    const indicator = slice.axes.map((axis) => ({
-      name: "{en|" + axis.label + (axis.available === false ? " —" : " " + fmtMetric(axis.key, axis.value, axis.decimals)) + "}\n{zh|" + (RADAR_ZH[axis.key] || "") + "}",
+    const axes = slice.axes;
+    const playerValues = axes.map((axis) => axis.available === false ? 0 : axis.value);
+    const avgValues = axes.map((axis) => axis.available === false ? 0 : axis.avg);
+    // Fixed scale: axis.max never adapts to the data (set in report_data.py
+    // as 2x the pro-scene average). A vertex beyond the outer ring is a real
+    // off-the-charts value; ECharts plots it beyond the grid (no clamping),
+    // so we only shrink the physical grid when the peak would otherwise
+    // leave the canvas — the value->radius mapping stays linear and honest.
+    let peak = 0;
+    axes.forEach((axis, i) => {
+      if (axis.available !== false && axis.max > 0) peak = Math.max(peak, playerValues[i] / axis.max);
+    });
+    const radiusPct = peak > 1.7 ? Math.max(78 / peak, 16) : 46;
+    const hasBurst = peak > 1.0;
+    const indicator = axes.map((axis) => ({
+      // Burst axes: no ECharts axis name at all — the overlay label carries
+      // name + big value + "best", so the two can never collide.
+      name: axis.burst ? "" : ("{en|" + axis.label + (axis.available === false ? " —" : " " + fmtMetric(axis.key, axis.value, axis.decimals)) + "}\n{zh|" + (RADAR_ZH[axis.key] || "") + "}"),
       max: axis.max
     }));
-    const playerValues = slice.axes.map((axis) => axis.available === false ? 0 : axis.value);
-    const avgValues = slice.axes.map((axis) => axis.available === false ? 0 : axis.avg);
     const option = {
       backgroundColor: "transparent",
       animationDuration: 350,
       tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
       radar: {
         center: ["50%", "51%"],
-        radius: "60%",
+        radius: radiusPct + "%",
         splitNumber: 4,
         indicator: indicator,
         axisName: {
@@ -1193,15 +1223,66 @@
           {
             value: playerValues,
             name: DATA.target.name,
-            lineStyle: { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
-            itemStyle: { color: "#ffd24a" },
-            areaStyle: { color: "rgba(255,210,74,.17)" }
+            lineStyle: hasBurst
+              ? { color: "#ffe9a8", width: 3, shadowColor: "rgba(255, 200, 64, .95)", shadowBlur: 22 }
+              : { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
+            itemStyle: { color: hasBurst ? "#ffe9a8" : "#ffd24a" },
+            areaStyle: { color: hasBurst ? "rgba(255,210,74,.24)" : "rgba(255,210,74,.17)" }
           }
         ]
       }]
     };
     radarChart.setOption(option, true);
     radarChart.resize();
+    renderBurstLabels(host, axes, playerValues, radiusPct);
+  }
+
+  function renderBurstLabels(host, axes, values, radiusPct) {
+    const old = host.querySelector(".burst-layer");
+    if (old) old.remove();
+    const layer = document.createElement("div");
+    layer.className = "burst-layer";
+    const w = host.clientWidth, h = host.clientHeight;
+    const cx = w * 0.5, cy = h * 0.51;
+    const R = (Math.min(w, h) / 2) * (radiusPct / 100);
+    axes.forEach((axis, i) => {
+      if (axis.available === false || !(axis.max > 0)) return;
+      const ratio = values[i] / axis.max;
+      if (ratio <= 1.0) return;
+      // ECharts radar: first axis points up, axes advance COUNTER-clockwise
+      // (verified against the rendered chart: axis 1 sits upper-left).
+      const ang = (-90 - i * 60) * Math.PI / 180;
+      // Anchor the label beyond the vertex (+52px) along the same radial line;
+      // the label itself is centred on that anchor point.
+      const lr = R * ratio + 52;
+      const x = cx + lr * Math.cos(ang);
+      const y = cy + lr * Math.sin(ang);
+      const el = document.createElement("div");
+      el.className = "burst-label";
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      const name = document.createElement("span");
+      name.className = "burst-name";
+      name.textContent = axis.label;
+      const zh = RADAR_ZH[axis.key];
+      if (zh) {
+        const zhEl = document.createElement("span");
+        zhEl.className = "zh";
+        zhEl.textContent = zh;
+        name.appendChild(zhEl);
+      }
+      const num = document.createElement("span");
+      num.className = "burst-num";
+      num.textContent = fmtMetric(axis.key, values[i], axis.decimals);
+      const tag = document.createElement("span");
+      tag.className = "burst-tag";
+      tag.textContent = "best";
+      el.appendChild(name);
+      el.appendChild(num);
+      el.appendChild(tag);
+      layer.appendChild(el);
+    });
+    host.appendChild(layer);
   }
 
   function renderCompare() {
@@ -1372,7 +1453,7 @@
   });
 
   window.addEventListener("resize", () => {
-    if (radarChart) radarChart.resize();
+    if (radarChart) renderRadar();
     if (styleRadar) styleRadar.resize();
   });
 

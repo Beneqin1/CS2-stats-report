@@ -10,7 +10,7 @@
 - **HLTV 风格报告**：深色底、橙白配色，Match Stats / Performance Rating / MVP 头部一应俱全
 - **Kill Matrix 击杀矩阵**：5×5 对位击杀/死亡热力表，支持 All / First kills / 残局 1vX / AWP / 手枪维度，环境/自杀归入"环境"行列
 - **Rating 分析**：KPR / DPR / KAST / Impact / ADR 分项对照表，Rating 2.0 近似公式各项可独立核对
-- **雷达图与对比**：目标选手六维雷达 + 与全场平均的条形对比
+- **雷达图与对比**：目标选手六维雷达（固定职业基准刻度，超标顶点"爆表"冲出网格并金色发光标注）+ 与全场平均的条形对比
 - **Style DNA 打法风格指纹**：六维风格雷达 + 原型分类（突破手/自由人/辅助/狙击核心/Anchor）+ 与职业选手画像的相似度对标
 - **教练建议引擎**：锚定具体地图/位置/动作的规则化建议（严重度分级、数据依据可展开）
 - **高光回合定位**：自动识别残局 1vX / ACE 多杀 / ECO 翻盘等高光回合，一键复制 `playdemo` 跳转指令
@@ -27,7 +27,7 @@
 
 ## 快速开始
 
-1. 下载并完整解压 `CS2Stats-1.3.2-onedir.zip`。
+1. 下载并完整解压 `CS2Stats-1.4.1-onedir.zip`。
 2. 双击解压出来的 `CS2Stats.exe`——首次启动会**自动注入 `stats.cfg`** 到 CS2 的 `game\csgo\cfg`（定位失败时会请你手动选择目录）。
 3. 打开 CS2 控制台，**在加载地图之前**执行：
 
@@ -87,8 +87,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 产物（zip 为平铺结构，解压后即可看到 CS2Stats.exe）：
 
 ```text
-package\CS2Stats-1.3.2-onedir\CS2Stats.exe
-dist\CS2Stats-1.3.2-onedir.zip
+package\CS2Stats-1.4.1-onedir\CS2Stats.exe
+dist\CS2Stats-1.4.1-onedir.zip
 ```
 
 从源码直接运行：`.\.venv\Scripts\python.exe run_app.py`（GUI）或 `run_app.py --watch`（监听）/ `run_app.py <demo>`（手动解析）。

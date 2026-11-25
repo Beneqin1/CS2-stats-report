@@ -8,7 +8,7 @@ approximation and is labelled as such in the report.
 from __future__ import annotations
 
 APP_NAME = "CS2 Stats Report"
-APP_VERSION = "1.3.2"
+APP_VERSION = "1.4.1"
 TARGET_DEFAULT = "Beneqin1"
 
 SIDE_T = "T"
@@ -58,15 +58,23 @@ SWING_PCT_LIMIT = 25.0
 
 MK_RATING_BONUS = 0.20
 
-# Radar normalisation maxima (display only; raw values are shown as labels).
-RADAR_MAX = {
-    "kpr": 1.20,
-    "rating": 2.00,
-    "impact": 3.50,
-    "adr": 120.0,
-    "kast": 100.0,
-    "survival": 100.0,
+# Radar display anchors (display only; raw values are shown as labels).
+# RADAR_PRO_AVG approximates the pro-scene average: the radar's middle ring
+# sits exactly on these values and the outer ring is fixed at 2x baseline,
+# so a vertex beyond the outer ring is a genuine off-the-charts performance.
+# "impact" is calibrated higher than the HLTV pro average (~1.1) because this
+# project's Impact formula adds first-kill / multi-kill bonuses on top of
+# 2.13*KPR + 0.42*APR - 0.41 and therefore runs ~0.2 hotter; using 1.1 would
+# make ordinary good games "burst" and break the scarcity of the effect.
+RADAR_PRO_AVG = {
+    "kpr": 0.72,
+    "rating": 1.06,
+    "impact": 1.30,
+    "adr": 78.0,
+    "kast": 72.0,
+    "survival": 36.0,
 }
+RADAR_MAX = {key: avg * 2.0 for key, avg in RADAR_PRO_AVG.items()}
 RADAR_AXES = [
     ("kpr", "KPR", 2),
     ("rating", "Rating", 2),

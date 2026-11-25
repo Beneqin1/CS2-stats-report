@@ -12,6 +12,7 @@ from .config import (
     COMPARE_METRICS,
     RADAR_AXES,
     RADAR_MAX,
+    RADAR_PRO_AVG,
     SIDE_CT,
     SIDE_T,
     SIDES,
@@ -205,12 +206,10 @@ def _radar_payload(
         for key, label, decimals in RADAR_AXES:
             value = float(getattr(metrics, key))
             avg_value = float(avg.get(key, 0.0))
-            max_value = max(
-                float(RADAR_MAX.get(key, 1.0)),
-                value * 1.15,
-                avg_value * 1.15,
-                0.001,
-            )
+            # Fixed scale: outer ring = 2x pro-scene average (RADAR_PRO_AVG).
+            # Values beyond it are meant to burst out of the grid, so the
+            # axis max must NOT grow with the data here.
+            max_value = float(RADAR_MAX.get(key, 1.0))
             axes.append(
                 {
                     "key": key,
@@ -218,6 +217,8 @@ def _radar_payload(
                     "value": value,
                     "avg": avg_value,
                     "max": max_value,
+                    "baseline": float(RADAR_PRO_AVG.get(key, max_value / 2.0)),
+                    "burst": bool(metrics.available) and max_value > 0 and value > max_value,
                     "decimals": decimals,
                     "available": bool(metrics.available),
                 }
