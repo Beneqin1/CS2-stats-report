@@ -160,6 +160,25 @@
     color: #dce6ef; font-size: 14px;
   }
   .stats-table td.player { text-align: left; min-width: 230px; }
+  .match-table-wrap { border: 0; overflow-x: auto; }
+  .match-table { width: 100%; max-width: 1120px; min-width: 860px; margin: 0 auto; table-layout: fixed; }
+  .match-table th, .match-table td { border-bottom: 0; }
+  .match-table th { background: #222b35; padding: 12px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,.09); }
+  .match-table th:not(:first-child), .match-table td:not(:first-child) { border-left: 1px solid rgba(255,255,255,.06); }
+  .match-table td { font-size: 16px; padding: 12px 12px; color: #e6eef6; }
+  .match-table th:first-child, .match-table td.player { width: 34%; text-align: left; }
+  .match-table th:not(:first-child) { text-align: right; }
+  .match-table tbody tr.player-row td { border-bottom: 1px solid rgba(255,255,255,.035); }
+  .match-table tbody tr.player-row.team-a { background: linear-gradient(90deg, rgba(152,255,255,.075), rgba(152,255,255,.018) 58%, transparent); }
+  .match-table tbody tr.player-row.team-b { background: linear-gradient(90deg, rgba(255,255,0,.065), rgba(255,255,0,.014) 58%, transparent); }
+  .match-table tbody tr.player-row:hover { background: rgba(255,255,255,.055); }
+  .match-table tbody tr.player-row.is-target { background: linear-gradient(90deg, rgba(255,210,74,.14), rgba(255,210,74,.035) 58%, transparent); }
+  .match-table .team-row td { background: #1a222b !important; border-top: 0; border-bottom: 1px solid rgba(255,255,255,.08); padding: 11px 12px !important; }
+  .match-table .team-chip { gap: 9px; font-size: 13px; letter-spacing: .04em; }
+  .match-table .team-chip > span:nth-child(2) { text-transform: uppercase; font-weight: 800; }
+  .match-table .team-chip .team-score { font-size: 15px; font-weight: 800; color: #f4f8fb; }
+  .match-table .team-divider td { height: 10px; }
+  .match-table .player-name { font-size: 16px; }
   .stats-table tbody tr:nth-child(even) { background: rgba(255,255,255,.014); }
   .stats-table tbody tr:hover { background: rgba(152,255,255,.055); }
   .stats-table tbody tr.is-target { background: rgba(255,210,74,.075); }
@@ -181,11 +200,18 @@
   .num.neg { color: var(--red); }
   .rating-hi { color: var(--green); font-weight: 750; }
   .rating-lo { color: var(--red); font-weight: 750; }
+  .rating-mid { color: #c9d7e3; font-weight: 700; }
   .muted { color: var(--faint); }
   .small-num { color: var(--muted); font-size: 10px; }
   .footnote { color: var(--faint); font-size: 10px; line-height: 1.65; margin-top: 10px; }
   .footnote strong { color: #b9c8d5; font-weight: 600; }
   .perf-panel { max-width: 1380px; margin-left: auto; margin-right: auto; }
+  .breakdown-table { width: 100%; min-width: 1080px; }
+  .breakdown-table td { font-size: 14px; padding: 9px 7px; }
+  .breakdown-table th { font-size: 11px; padding: 10px 7px; }
+  .breakdown-table td.player { min-width: 190px; }
+  .breakdown-note { color: var(--muted); font-size: 10px; line-height: 1.7; margin-top: 10px; }
+  .breakdown-note b { color: #c9d7e3; font-weight: 600; }
   .perf-chart { max-width: 1180px; margin: 2px auto 0; }
   .perf-row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 52px; gap: 10px; align-items: center; margin-bottom: 6px; padding: 3px 6px; border-radius: 5px; border-left: 3px solid transparent; }
   .perf-row.tier-good { background: linear-gradient(90deg, rgba(55,196,111,.16), rgba(55,196,111,.03) 62%, transparent); border-left-color: #37c46f; }
@@ -310,18 +336,20 @@
   }
   .radar-panel h3, .compare-panel h3 { margin: 0; color: #f5e7bd; font-size: 14px; font-weight: 700; }
   .radar-panel .panel-sub, .compare-panel .panel-sub { color: #b8aa88; }
-  #radar-chart { width: 100%; height: 430px; margin-top: 2px; position: relative; overflow: visible; }
+  #radar-chart { width: 100%; height: 580px; margin-top: 2px; position: relative; overflow: visible; }
   .radar-panel, .player-grid { overflow: visible; }
   .burst-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  .burst-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); background: #fff5d0; box-shadow: 0 0 12px #fff0ae, 0 0 26px #ffc247, 0 0 42px #ff9c20; }
   .burst-label { position: absolute; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; }
-  .burst-name { display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #f2e2b8; text-shadow: 0 0 8px rgba(0,0,0,.75); }
+  .burst-name { display: block; font-size: 15px; font-weight: 800; letter-spacing: 1px; color: #fff0bf; text-shadow: 0 0 10px rgba(0,0,0,.85); }
   .burst-name .zh { color: #b8a887; font-size: 9px; font-weight: 600; letter-spacing: 0; margin-left: 4px; }
   .burst-num {
-    display: block; font-size: 26px; font-weight: 800; font-style: italic; line-height: 1.05;
+    display: block; font-size: 32px; font-weight: 800; font-style: italic; line-height: 1.05;
     color: #ffe9a8;
     text-shadow: 0 0 10px rgba(255, 208, 84, .95), 0 0 26px rgba(255, 178, 40, .65), 0 2px 6px rgba(0, 0, 0, .6);
   }
   .burst-tag {
+    color: #ffca63;
     display: block; font-size: 11px; font-weight: 700; font-style: italic; letter-spacing: 1.5px;
     color: #e8c96a; text-shadow: 0 0 8px rgba(255, 190, 60, .8);
   }
@@ -521,27 +549,17 @@
     <div class="panel-head">
       <div><h2>Match stats</h2></div>
     </div>
-    <div class="table-wrap">
-      <table class="stats-table">
+    <div class="table-wrap match-table-wrap">
+      <table class="stats-table match-table">
         <thead>
           <tr>
             <th>Player</th>
             <th>K-D</th>
-            <th>+/-</th>
-            <th>K/D</th>
-            <th title="每回合平均击杀：总击杀 / 正式回合数">KPR</th>
-            <th>K (HS)</th>
-            <th title="爆头率：爆头击杀 / 总击杀（计分板属性）">HS%</th>
-            <th>D</th>
-            <th>A</th>
-            <th title="KAST：击杀/助攻/存活/被补枪 的回合占比；traded 只计入逐回合核对一致的回合">KAST<span class="ref-tag">推断</span></th>
-            <th title="每回合首个击杀的归属，由计分板 kills_total 首次增量推断">首杀<span class="ref-tag">参考</span></th>
-            <th title="每回合第一个死亡事件中被击杀的次数（事件层，归因异常时可能失真）">首死<span class="ref-tag">推断</span></th>
-            <th title="首杀成功率 = 首杀 / (首杀 + 首死)">FK%<span class="ref-tag">推断</span></th>
+            <th>Swing</th>
             <th>ADR</th>
-            <th title="回合 MVP 次数：demo 无 round_mvp 事件，按规则近似——回合胜利方中 impact（击杀 + 0.45×助攻）最高者">MVP<span class="ref-tag">近似</span></th>
-            <th>Swing<span class="ref-tag">近似</span></th>
-            <th>Rating ≈</th>
+            <th title="爆头率：爆头击杀 / 总击杀（计分板属性）">HS%</th>
+            <th title="KAST：击杀/助攻/存活/被补枪 的回合占比；本场为计分板推断">KAST</th>
+            <th title="近似 Rating，非 HLTV 官方数值">Rating</th>
           </tr>
         </thead>
         <tbody id="stats-body"></tbody>
@@ -561,30 +579,36 @@
       <div>
         <h2>Rating 分解<span class="ref-tag">近似</span></h2>
         <p class="panel-sub">
-          Rating ≈ 0.0073×KAST + 0.3591×KPR − 0.5329×DPR + 0.2372×Impact + 0.0032×ADR + 0.1587（KAST 用百分数代入；近似公式，非 HLTV 官方）。<br>
-          Impact = 2.13×KPR + 0.42×APR − 0.41 + 0.50×首杀/回合 + 0.30×多杀回合/回合；Swing 与经济修正单独列出，不并入 Rating。
+          从主表移出的明细：击杀/死亡结构、首杀首死、MVP 与爆头率。Rating 仍是近似值；KAST、首杀、首死、FK%、MVP 为推断/参考口径。
         </p>
       </div>
     </div>
     <div class="table-wrap">
-      <table class="stats-table">
+      <table class="stats-table breakdown-table">
         <thead>
           <tr>
             <th>Player</th>
+            <th>+/-</th>
+            <th>K/D</th>
             <th>KPR</th>
-            <th>DPR</th>
-            <th>APR</th>
-            <th>ADR</th>
-            <th>KAST<span class="ref-tag">推断</span></th>
-            <th>Impact</th>
-            <th>Swing<span class="ref-tag">近似</span></th>
-            <th>Econ Δ<span class="ref-tag">近似</span></th>
-            <th>Rating ≈</th>
+            <th>K (HS)</th>
+            <th>A</th>
+            <th>D</th>
+            <th title="每回合首个击杀的归属，由计分板 kills_total 首次增量推断">首杀<span class="ref-tag">参考</span></th>
+            <th title="每回合第一个死亡事件中被击杀的次数（事件层，归因异常时可能失真）">首死<span class="ref-tag">推断</span></th>
+            <th title="首杀成功率 = 首杀 / (首杀 + 首死)">FK%<span class="ref-tag">推断</span></th>
+            <th title="回合 MVP 次数：demo 无 round_mvp 事件，按规则近似——回合胜利方中 impact（击杀 + 0.45×助攻）最高者">MVP<span class="ref-tag">近似</span></th>
+            <th>HS%</th><th>DPR</th><th>APR</th><th>ADR</th><th>KAST ≈</th><th>Impact ≈</th><th>原始 Rating ≈</th>
           </tr>
         </thead>
         <tbody id="breakdown-body"></tbody>
       </table>
     </div>
+    <p class="breakdown-note">
+      <b>Rating 近似公式</b>：0.0073×KAST + 0.3591×KPR − 0.5329×DPR + 0.2372×Impact + 0.0032×ADR + 0.1587；
+      Impact 含首杀/多杀加成。Rating &gt; 2.0 时，超出部分乘 0.85；原始公式值保留供核对。<br>
+      Swing：{{ report.meta.swing.source }}。个人事件胜率变化总和 / 正式回合数 × 100；未经职业比赛数据校准，不等同 HLTV Swing。
+    </p>
   </section>
 
   <section class="panel matrix-panel">
@@ -639,7 +663,7 @@
           <span><i class="legend-line gold"></i>玩家</span>
           <span><i class="legend-line red"></i>全场平均</span>
         </div>
-        <div class="radar-scale-note">刻度固定：中环 = 职业均值基准，外环 = 2× 基准；顶点超出外环为“爆表”，金色发光 + 大数字标注。</div>
+        <div class="radar-scale-note">刻度固定：2/3 半径环 = 职业参考基准，外环 = 1.5× 基准；顶点超出外环为“爆表”，金色发光 + 大数字标注。</div>
       </div>
       <div class="panel compare-panel">
         <div class="panel-head">
@@ -784,7 +808,7 @@
       <li><b>事件层</b>：{{ report.matrix.note or '本场事件归因无法与计分板属性核对一致，Kill Matrix 已隐藏，不显示可能错误的数据。' }}</li>
       {% endif %}
       <li><b>参考层</b>：Open Kills 由计分板 kills_total 的每回合首次增量推断，标“参考”，不参与 fixture 精确层判定。</li>
-      <li><b>近似层</b>：Rating、Swing、MVP；Rating 用公开流传的 Rating 2.0 近似公式（分项见“Rating 分解”表），Swing 在事件层可靠时用事件级近似，事件层不可靠时改用计分板每回合 K/A/D 的回合级近似；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
+      <li><b>近似层</b>：Rating、Swing、MVP；Rating 用公开流传的 Rating 2.0 近似公式（分项见“Rating 分解”表），Swing 使用经济/人数/下包/时间的自研启发式 WPA，输入不可靠时隐藏并明确警告；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
       <li><b>All / T / CT</b>：All = T + CT；T/CT 分面来自计分板每回合差值。</li>
     </ul>
   </div>
@@ -861,16 +885,22 @@
   }
 
   function ratingClass(value) {
-    return value >= 1 ? "rating-hi" : "rating-lo";
+    if (value >= 1.10) return "rating-hi";
+    if (value <= 0.95) return "rating-lo";
+    return "rating-mid";
+  }
+
+  function swingClass(value) {
+    if (value > 0.01) return "pos";
+    if (value < -0.01) return "neg";
+    return "";
   }
 
   function teamRow(team, colspan) {
-    const scope = state.side === "ALL" ? "全场" : SIDE_LABEL[state.side];
-    return '<tr class="team-row"><td colspan="' + (colspan || 18) + '">' +
+    return '<tr class="team-row"><td colspan="' + (colspan || 7) + '">' +
       '<div class="team-chip" style="--team:' + team.color + '">' +
         '<span class="team-bar"></span>' +
         '<span>' + esc(team.name) + '</span>' +
-        '<span class="team-tag">' + scope + '</span>' +
         '<span class="team-score" title="地图比分">' + team.score + '</span>' +
       '</div>' +
     '</td></tr>';
@@ -882,6 +912,7 @@
 
   function renderStats() {
     const body = $("#stats-body");
+    if (!body) return;
     const order = DATA.table_order[state.side] || [];
     const rows = [];
     let lastTeam = null;
@@ -889,10 +920,8 @@
       const player = bySid.get(sid);
       if (!player) continue;
       if (player.team !== lastTeam) {
-        if (lastTeam !== null) {
-          rows.push('<tr class="team-divider"><td colspan="18"></td></tr>');
-        }
-        rows.push(teamRow(teamByKey.get(player.team)));
+        if (lastTeam !== null) rows.push('<tr class="team-divider"><td colspan="7"></td></tr>');
+        rows.push(teamRow(teamByKey.get(player.team), 7));
         lastTeam = player.team;
       }
       const m = player.metrics[state.side];
@@ -901,37 +930,26 @@
       const support = player.field_support && player.field_support[state.side]
         ? new Set(player.field_support[state.side]) : null;
       const has = (key) => !support || support.has(key);
-      const cell = (content) => na ? blank : content;
       const cellf = (key, content) => (na || !has(key)) ? blank : content;
       const target = targetName && player.name === targetName;
-      const kd = (m.deaths > 0) ? fixed(m.kd, 2) : (m.kills > 0 ? fixed(m.kills, 2) : "0.00");
+      const teamClass = "team-" + String(player.team || "a").toLowerCase();
       rows.push(
-        '<tr class="' + (target ? "is-target" : "") + '">' +
+        '<tr class="player-row ' + teamClass + (target ? ' is-target' : '') + '">' +
           '<td class="player"><div class="player-cell" style="--team:' + player.color + '">' +
             '<span class="team-bar"></span>' +
             '<span class="player-name">' + esc(player.name) + '</span>' +
             (target ? '<span class="target-star">★</span>' : '') +
           '</div></td>' +
-          statCell(cell(m.kills + "-" + m.deaths)) +
-          statCell(cell('<span class="num ' + (m.plus_minus > 0 ? "pos" : (m.plus_minus < 0 ? "neg" : "")) + '">' + (m.plus_minus > 0 ? "+" : "") + m.plus_minus + '</span>')) +
-          statCell(cell(kd)) +
-          statCell(cell(fixed(m.kpr, 2))) +
-          statCell(cellf('headshot_kills', m.kills + ' <span class="small-num">(' + m.headshot_kills + ')</span>')) +
-          statCell(cellf('headshot_kills', pct(m.hs_pct, 1))) +
-          statCell(cell(m.deaths)) +
-          statCell(cell(m.assists)) +
-          statCell(cellf('kast', pct(m.kast, 1))) +
-          statCell(cellf('opening_kills', m.opening_kills)) +
-          statCell(cell(m.opening_deaths)) +
-          statCell(cell(m.opening_kills + m.opening_deaths > 0 ? pct(m.fk_rate, 0) : '<span class="muted">—</span>')) +
+          statCell(m.available ? m.kills + " : " + m.deaths : blank) +
+          statCell(!DATA.meta.swing.available ? blank : cellf('swing', '<span class="num ' + swingClass(m.swing_pct) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
           statCell(cellf('adr', adrFixed(m.adr))) +
-          statCell(cellf('mvps', m.mvps)) +
-          statCell(cellf('swing', '<span class="num ' + (m.swing_pct > 0 ? "pos" : (m.swing_pct < 0 ? "neg" : "")) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
-          statCell(cell('<span class="' + ratingClass(m.rating) + '">' + fixed(m.rating, 2) + '</span>')) +
+          statCell(cellf('headshot_kills', pct(m.hs_pct, 1))) +
+          statCell(cellf('kast', pct(m.kast, 1))) +
+          statCell(na ? blank : '<span class="' + ratingClass(m.rating) + '">' + fixed(m.rating, 2) + '</span>') +
         '</tr>'
       );
     }
-    body.innerHTML = rows.join("") || '<tr><td colspan="18" class="empty">没有可显示的选手数据。</td></tr>';
+    body.innerHTML = rows.join("") || '<tr><td colspan="7" class="empty">没有可显示的选手数据。</td></tr>';
   }
 
   function renderBreakdown() {
@@ -944,39 +962,46 @@
       const player = bySid.get(sid);
       if (!player) continue;
       if (player.team !== lastTeam) {
-        if (lastTeam !== null) {
-          rows.push('<tr class="team-divider"><td colspan="10"></td></tr>');
-        }
-        rows.push(teamRow(teamByKey.get(player.team), 10));
+        if (lastTeam !== null) rows.push('<tr class="team-divider"><td colspan="18"></td></tr>');
+        rows.push(teamRow(teamByKey.get(player.team), 18));
         lastTeam = player.team;
       }
       const m = player.metrics[state.side];
+      const na = !m.available;
       const blank = '<span class="muted">—</span>';
-      const cell = (content) => !m.available ? blank : content;
-      const target = targetName && player.name === targetName;
       const support = player.field_support && player.field_support[state.side]
         ? new Set(player.field_support[state.side]) : null;
-      const kastCell = support && !support.has("kast") ? blank : cell(pct(m.kast, 1));
+      const has = (key) => !support || support.has(key);
+      const cell = (content) => na ? blank : content;
+      const cellf = (key, content) => (na || !has(key)) ? blank : content;
+      const target = targetName && player.name === targetName;
+      const teamClass = "team-" + String(player.team || "a").toLowerCase();
+      const fk = (m.opening_kills + m.opening_deaths > 0) ? pct(m.fk_rate, 0) : blank;
       rows.push(
-        '<tr class="' + (target ? "is-target" : "") + '">' +
+        '<tr class="player-row ' + teamClass + (target ? ' is-target' : '') + '">' +
           '<td class="player"><div class="player-cell" style="--team:' + player.color + '">' +
             '<span class="team-bar"></span>' +
             '<span class="player-name">' + esc(player.name) + '</span>' +
             (target ? '<span class="target-star">★</span>' : '') +
           '</div></td>' +
+          statCell(cell('<span class="num ' + (m.plus_minus > 0 ? "pos" : (m.plus_minus < 0 ? "neg" : "")) + '">' + (m.plus_minus > 0 ? "+" : "") + m.plus_minus + '</span>')) +
+          statCell(cell(fixed(m.kd, 2))) +
           statCell(cell(fixed(m.kpr, 2))) +
-          statCell(cell(fixed(m.dpr, 2))) +
-          statCell(cell(fixed(m.apr, 2))) +
-          statCell(cell(adrFixed(m.adr))) +
-          statCell(kastCell) +
-          statCell(cell(fixed(m.impact, 2))) +
-          statCell(cell('<span class="num ' + (m.swing_pct > 0 ? "pos" : (m.swing_pct < 0 ? "neg" : "")) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
-          statCell(cell('<span class="num ' + (m.econ_delta > 0 ? "pos" : (m.econ_delta < 0 ? "neg" : "")) + '">' + signed(m.econ_delta, 3) + '</span>')) +
-          statCell(cell('<span class="' + ratingClass(m.rating) + '">' + fixed(m.rating, 2) + '</span>')) +
+          statCell(cellf('headshot_kills', m.kills + ' <span class="small-num">(' + m.headshot_kills + ')</span>')) +
+          statCell(cell(m.assists)) +
+          statCell(cell(m.deaths)) +
+          statCell(cellf('opening_kills', m.opening_kills)) +
+          statCell(cell(m.opening_deaths)) +
+          statCell(cell(fk)) +
+          statCell(cellf('mvps', m.mvps)) +
+          statCell(cellf('headshot_kills', pct(m.hs_pct, 1))) +
+          statCell(cell(fixed(m.dpr, 2))) + statCell(cell(fixed(m.apr, 2))) +
+          statCell(cellf('adr', adrFixed(m.adr))) + statCell(cellf('kast', pct(m.kast, 1))) +
+          statCell(cell(fixed(m.impact, 2))) + statCell(cell(fixed(m.base_rating, 2))) +
         '</tr>'
       );
     }
-    body.innerHTML = rows.join("") || '<tr><td colspan="10" class="empty">没有可显示的选手数据。</td></tr>';
+    body.innerHTML = rows.join("") || '<tr><td colspan="18" class="empty">没有可显示的选手数据。</td></tr>';
   }
 
   function perfColor(rating) {
@@ -1173,7 +1198,7 @@
     const playerValues = axes.map((axis) => axis.available === false ? 0 : axis.value);
     const avgValues = axes.map((axis) => axis.available === false ? 0 : axis.avg);
     // Fixed scale: axis.max never adapts to the data (set in report_data.py
-    // as 2x the pro-scene average). A vertex beyond the outer ring is a real
+    // as 1.5x the pro-scene reference). A vertex beyond the outer ring is a real
     // off-the-charts value; ECharts plots it beyond the grid (no clamping),
     // so we only shrink the physical grid when the peak would otherwise
     // leave the canvas — the value->radius mapping stays linear and honest.
@@ -1181,7 +1206,7 @@
     axes.forEach((axis, i) => {
       if (axis.available !== false && axis.max > 0) peak = Math.max(peak, playerValues[i] / axis.max);
     });
-    const radiusPct = peak > 1.7 ? Math.max(78 / peak, 16) : 46;
+    const radiusPct = Math.min(58, 82 / (Math.max(1, peak) + 0.55));
     const hasBurst = peak > 1.0;
     const indicator = axes.map((axis) => ({
       // Burst axes: no ECharts axis name at all — the overlay label carries
@@ -1194,9 +1219,9 @@
       animationDuration: 350,
       tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
       radar: {
-        center: ["50%", "51%"],
+        center: ["50%", "52%"],
         radius: radiusPct + "%",
-        splitNumber: 4,
+        splitNumber: 3,
         indicator: indicator,
         axisName: {
           color: "#f2e2b8", fontSize: 12, fontWeight: 600,
@@ -1212,6 +1237,7 @@
       series: [{
         type: "radar",
         symbol: "none",
+        clip: false,
         data: [
           {
             value: avgValues,
@@ -1224,8 +1250,8 @@
             value: playerValues,
             name: DATA.target.name,
             lineStyle: hasBurst
-              ? { color: "#ffe9a8", width: 3, shadowColor: "rgba(255, 200, 64, .95)", shadowBlur: 22 }
-              : { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
+              ? { color: "#ffe9a8", width: 3.5, shadowColor: "rgba(255, 183, 30, 1)", shadowBlur: 34 }
+              : { color: "#ffd24a", width: 2.2 },
             itemStyle: { color: hasBurst ? "#ffe9a8" : "#ffd24a" },
             areaStyle: { color: hasBurst ? "rgba(255,210,74,.24)" : "rgba(255,210,74,.17)" }
           }
@@ -1243,7 +1269,7 @@
     const layer = document.createElement("div");
     layer.className = "burst-layer";
     const w = host.clientWidth, h = host.clientHeight;
-    const cx = w * 0.5, cy = h * 0.51;
+    const cx = w * 0.5, cy = h * 0.52;
     const R = (Math.min(w, h) / 2) * (radiusPct / 100);
     axes.forEach((axis, i) => {
       if (axis.available === false || !(axis.max > 0)) return;
@@ -1252,9 +1278,17 @@
       // ECharts radar: first axis points up, axes advance COUNTER-clockwise
       // (verified against the rendered chart: axis 1 sits upper-left).
       const ang = (-90 - i * 60) * Math.PI / 180;
-      // Anchor the label beyond the vertex (+52px) along the same radial line;
-      // the label itself is centred on that anchor point.
-      const lr = R * ratio + 52;
+      // Vertex dot: the burst itself gets a strong neon marker. The label sits
+      // further out so it never covers the axis name or the polygon.
+      const vr = R * ratio;
+      const vx = cx + vr * Math.cos(ang);
+      const vy = cy + vr * Math.sin(ang);
+      const dot = document.createElement("div");
+      dot.className = "burst-dot";
+      dot.style.left = vx + "px";
+      dot.style.top = vy + "px";
+      layer.appendChild(dot);
+      const lr = vr + 58;
       const x = cx + lr * Math.cos(ang);
       const y = cy + lr * Math.sin(ang);
       const el = document.createElement("div");
@@ -1301,7 +1335,7 @@
       return;
     }
     const rows = slice.rows.map((row) => {
-      const available = row.available;
+      const available = row.available && (row.key !== "swing_pct" || DATA.meta.swing.available);
       const arrow = available ? (row.better ? '<span class="arrow up">▲</span>' : (row.worse ? '<span class="arrow down">▼</span>' : "")) : "";
       const pct = available ? row.bar_pct : 0;
       const labelLeft = Math.min(92, Math.max(3, pct - 3));

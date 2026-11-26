@@ -8,7 +8,7 @@ approximation and is labelled as such in the report.
 from __future__ import annotations
 
 APP_NAME = "CS2 Stats Report"
-APP_VERSION = "1.4.2"
+APP_VERSION = "1.5.0"
 TARGET_DEFAULT = "Beneqin1"
 
 SIDE_T = "T"
@@ -31,6 +31,11 @@ RATING_DPR_COEF = -0.5329
 RATING_IMPACT_COEF = 0.2372
 RATING_ADR_COEF = 0.0032
 RATING_INTERCEPT = 0.1587
+# Soft cap: the public approximation overshoots on stomps (KPR/DPR extremes),
+# so values above the threshold are compressed linearly.  A raw 2.35 becomes
+# ~2.30; ratings at or below 2.0 are untouched.
+RATING_SOFT_THRESHOLD = 2.0
+RATING_SOFT_SLOPE = 0.85
 
 # Impact: the classic 2.13*KPR + 0.42*APR - 0.41 base, plus explicit opening
 # kill and multi-kill round weighting (per round, labelled approximate).
@@ -50,22 +55,13 @@ ECON_RATING_COEF = 0.12
 ECON_DEATH_RATING_COEF = 0.10
 ECON_RATING_LIMIT = 0.20
 
-SWING_EVEN_BONUS = 0.75
-SWING_AHEAD_COEF = -0.35
+SWING_CALIBRATION = 3.0
 SWING_PER_ROUND = 16.0
-SWING_RATING_COEF = 0.10
 SWING_PCT_LIMIT = 25.0
 
 MK_RATING_BONUS = 0.20
 
-# Radar display anchors (display only; raw values are shown as labels).
-# RADAR_PRO_AVG approximates the pro-scene average: the radar's middle ring
-# sits exactly on these values and the outer ring is fixed at 2x baseline,
-# so a vertex beyond the outer ring is a genuine off-the-charts performance.
-# "impact" is calibrated higher than the HLTV pro average (~1.1) because this
-# project's Impact formula adds first-kill / multi-kill bonuses on top of
-# 2.13*KPR + 0.42*APR - 0.41 and therefore runs ~0.2 hotter; using 1.1 would
-# make ordinary good games "burst" and break the scarcity of the effect.
+# Fixed display scale: pro reference at 2/3 radius, outer ring at 1.5x.
 RADAR_PRO_AVG = {
     "kpr": 0.72,
     "rating": 1.06,
@@ -74,7 +70,7 @@ RADAR_PRO_AVG = {
     "kast": 72.0,
     "survival": 36.0,
 }
-RADAR_MAX = {key: avg * 2.0 for key, avg in RADAR_PRO_AVG.items()}
+RADAR_MAX = {key: avg * 1.5 for key, avg in RADAR_PRO_AVG.items()}
 RADAR_AXES = [
     ("kpr", "KPR", 2),
     ("rating", "Rating", 2),

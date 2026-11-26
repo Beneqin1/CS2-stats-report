@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
-from .config import SIDE_CT, SIDE_T, SIDES
+from .config import SIDE_CT, SIDE_T, SIDES, SWING_CALIBRATION
 from .demo_parser import Counters, ParsedDemo, Player
 
 MATRIX_SCOPES = ("all", "first", "clutch", "awp", "pistol")
@@ -484,6 +484,7 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
 
     event_reliable = True
     differences: list[dict[str, Any]] = []
+    fallback_swings: dict[int, tuple[float, dict[str, float]]] = {}
 
     for player in parsed.players:
         final = final_rows.get(player.steamid)
@@ -593,7 +594,10 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
                 if won_round:
                     round_swing = impact
                 else:
-                    round_swing = -(0.35 * impact + 0.20 * deaths)
+                    # Approximate round WPA for losing rounds: losing a round
+                    # must pull the column negative enough to match HLTV's
+                    # visible -1%..-3% range, while still rewarding impact.
+                    round_swing = -(0.80 * impact + 0.80 * deaths)
                 scoreboard_swing += round_swing
                 counter.swing_sum += round_swing
                 side_swing[round_side] += round_swing
@@ -655,10 +659,16 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             or old_raw.deaths != new_raw.deaths
             or old_raw.assists != new_raw.assists
         )
+        fallback_value = scoreboard_swing / SWING_CALIBRATION
+        fallback_side = {
+            each_side: side_swing[each_side] / SWING_CALIBRATION
+            for each_side in (SIDE_T, SIDE_CT)
+        }
+        fallback_swings[player.steamid] = (fallback_value, fallback_side)
         if kda_mismatch:
-            new_raw.swing_sum = scoreboard_swing
+            new_raw.swing_sum = fallback_value
             for each_side in (SIDE_T, SIDE_CT):
-                side[each_side].swing_sum = side_swing[each_side]
+                side[each_side].swing_sum = fallback_side[each_side]
         else:
             new_raw.swing_sum = old_raw.swing_sum
             for each_side in (SIDE_T, SIDE_CT):
@@ -727,6 +737,17 @@ def apply_scoreboard(parsed: ParsedDemo, demo_path: str) -> bool:
             availability[f"deaths_{each_side}"] = True
             availability[f"adr_{each_side}"] = True
         parsed.field_availability[player.steamid] = availability
+
+    if not event_reliable:
+        for player in parsed.players:
+            entry = fallback_swings.get(player.steamid)
+            if not entry:
+                continue
+            swing, side_values = entry
+            player.raw.swing_sum = swing
+            for each_side in (SIDE_T, SIDE_CT):
+                if each_side in player.side:
+                    player.side[each_side].swing_sum = side_values.get(each_side, 0.0)
 
     _rebuild_matrix(parsed, formal_rounds, reliable_rounds, excluded_rounds)
     _consistency_checks(parsed, formal_rounds, sb_kd, rounds_missing)

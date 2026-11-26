@@ -23,7 +23,7 @@ from .utils import sha256_file
 LOGGER = logging.getLogger(__name__)
 
 # Bump whenever ParsedDemo's shape or the parsing semantics change.
-CACHE_VERSION = 6
+CACHE_VERSION = 7
 
 
 def _disabled() -> bool:

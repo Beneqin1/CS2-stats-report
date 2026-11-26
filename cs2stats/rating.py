@@ -39,6 +39,8 @@ from .config import (
     RATING_INTERCEPT,
     RATING_KAST_COEF,
     RATING_KPR_COEF,
+    RATING_SOFT_SLOPE,
+    RATING_SOFT_THRESHOLD,
     SWING_PER_ROUND,
     SWING_PCT_LIMIT,
 )
@@ -147,6 +149,10 @@ def metrics_from_counters(counter: Counters) -> Metrics:
     # visible as separate columns instead of being folded in, so the value can
     # be cross-checked against the public formula.
     rating = max(0.0, base)
+    if rating > RATING_SOFT_THRESHOLD:
+        rating = RATING_SOFT_THRESHOLD + (
+            rating - RATING_SOFT_THRESHOLD
+        ) * RATING_SOFT_SLOPE
     mk_rating = rating + MK_RATING_BONUS * multikill_per_round
 
     return Metrics(

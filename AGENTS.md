@@ -8,7 +8,7 @@
 - 改解析层（精确字段）后必须重跑用户 fixture 校验，须 verified：
   `PYTHONPATH=. ./.venv/Scripts/python.exe validate_stats.py --quiet <demo> <fixture>`
 - 回归三件套：`./.venv/Scripts/python.exe -m compileall -q cs2stats`、`PYTHONPATH=. ./.venv/Scripts/python.exe -m unittest discover -s tests`、fixture 校验。
-- 不自动 git push：只输出建议文件清单，用户 review 后手动 push。
+- 不自动 git push：只输出建议文件清单，用户 review 后手动 push。改代码前先做本地存档 commit；本轮存档为 53be545。
 - 不顺手重构不相关代码；不升级/更换依赖版本；修复必须对所有 demo 通用，禁止用 fixture 特定值打补丁。
 - 解析失败 / 字段缺失 / demo 截断 → 报告里明确警告，禁止静默跳过。
 - 每次交付末尾附"复盘"（改动是否最小化 / 红线检查 / 验证完整性）。
@@ -40,7 +40,9 @@
 - demoparser2 错误文本形态（实测）：截断文件报 `parse error: file-info header offset N outside command stream 16..M`（CS2 demo 尾部有 file-info 偏移表，截断即越界）；垃圾文件报 `invalid demo file: magic bytes mismatch (expected PBDEMS2\0)`；中段损坏报 `decompression error: snappy: corrupt input`。监听层的"可重试 vs 硬错误"分类就建立在这三类文本上（demo_watch.py `_TRANSIENT_HINTS`）。
 - 基线 fixture：mirage demo `auto-20261122-1713-de_mirage-Beneqin1.dem`（14 回合，sha256 d536b7b1…）对应 `fixtures/user_mirage_20261122.fixture.json`；另一个 2313 mirage demo sha 不匹配该 fixture。
 - 打包：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./build_exe.ps1`（默认 onedir 平铺：zip 首层即 CS2Stats.exe；产物 `package\CS2Stats-x.y.z-onedir\` + `dist\*.zip`）。zip 在冒烟前打包；冒烟后清理包内运行产物（output/、settings.json、stats.cfg、cache/）。
-- 报告雷达图固定刻度：`RADAR_PRO_AVG`（config.py）= 中环职业均值基准，外环 = 2× 基准固定不随数据自适应；爆表 = value>max 时 ECharts 线性外推绘制（不压平），峰值 >1.7× 时网格物理收缩（半径 78/峰值 %）；大数字标注走 HTML 覆盖层（`.burst-layer`），全场平均不参与爆表。Impact 基准 1.30 是按本项目公式（含首杀/多杀加成，比 HLTV 高约 0.2）校准的，勿照抄 HLTV 1.1。（v1.4.1）
+- 报告雷达图固定刻度（v1.5.0）：`RADAR_PRO_AVG` 是预设参考，2/3 半径环为参考值，外环为 1.5× 参考值；超出按真实数值线性外推，画布网格可物理缩小腾出标签空间，不能改变刻度或压平数据。旧版 v1.4.1 的外环 2× 基准已归档。Impact 参考 1.30 包含本项目首杀/多杀加成，非职业数据库测得。
+- Swing v1.5.0：独立 swing.py 用经济/人数/阵营/下包/时间进行启发式 WPA 分析，个人事件变化按回合平均输出百分点。数据不可靠时隐藏并警告，不以计分板代理冒充 WPA；不按单场数据调倍率。awpy win-prob extra 需额外依赖与联网模型，因此未启用。
+- 删除旧算法常量前检查导入依赖：scoreboard.py 仍使用 SWING_CALIBRATION；缺失会使计分板层未加载。强制无缓存并跑 fixture 可发现该问题（v1.5.0 已恢复）。
 - 版本发布固定动作：`config.py APP_VERSION` + `build_exe.ps1` 内版本号 + README/README.txt/CHANGELOG + `docs/releases/vX.Y.Z.md`。
 - git 状态（2026-11-24）：本地 main 在 df6a151（v1.3.0）及其后改动，远端在 928c8f3；tag v1.3.0 仅本地。push 时连同新 commit 与 tag 一起。
 

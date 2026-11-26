@@ -27,7 +27,7 @@
 
 ## 快速开始
 
-1. 下载并完整解压 `CS2Stats-1.4.2-onedir.zip`。
+1. 下载并完整解压 `CS2Stats-1.5.0-onedir.zip`。
 2. 双击解压出来的 `CS2Stats.exe`——首次启动会**自动注入 `stats.cfg`** 到 CS2 的 `game\csgo\cfg`（定位失败时会请你手动选择目录）。
 3. 打开 CS2 控制台，**在加载地图之前**执行：
 
@@ -87,8 +87,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build_exe.ps1
 产物（zip 为平铺结构，解压后即可看到 CS2Stats.exe）：
 
 ```text
-package\CS2Stats-1.4.2-onedir\CS2Stats.exe
-dist\CS2Stats-1.4.2-onedir.zip
+package\CS2Stats-1.5.0-onedir\CS2Stats.exe
+dist\CS2Stats-1.5.0-onedir.zip
 ```
 
 从源码直接运行：`.\.venv\Scripts\python.exe run_app.py`（GUI）或 `run_app.py --watch`（监听）/ `run_app.py <demo>`（手动解析）。

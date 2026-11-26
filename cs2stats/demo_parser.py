@@ -752,6 +752,7 @@ def _mark_opening(kills: list[dict[str, Any]], round_of) -> None:
         row["_opening"] = True
 
 
+
 def _exact_from_raw(raw: Counters, total_rounds: int) -> dict[str, Any]:
     """Expose the formal-round event rebuild through the exact-field interface."""
     headshot_pct = safe_div(raw.headshot_kills * 100.0, raw.kills)

@@ -88,6 +88,7 @@ _BASE_TABLE_FIELDS = (
     "kills", "deaths", "assists", "adr", "kast", "opening_kills",
     "headshot_kills", "flash_assists", "traded_deaths", "multikill_rounds",
     "mvps", "rating", "kdr", "plus_minus", "kd", "swing",
+    "kpr", "dpr", "apr", "opening_deaths", "fk_rate", "hs_pct",
 )
 
 
@@ -454,7 +455,16 @@ def build_report(
 ) -> dict[str, Any]:
     """Create the full JSON-serialisable report payload."""
 
+    from dataclasses import replace
+    from .swing import analyse_match
+
     pms = build_player_metrics(demo)
+    swing_values, swing_meta = analyse_match(demo)
+    for pm in pms:
+        values = swing_values.get(pm.player.steamid, {})
+        pm.all = replace(pm.all, swing_pct=values.get('ALL', 0.0))
+        pm.sides = {side: replace(metric, swing_pct=values.get(side, 0.0))
+                    for side, metric in pm.sides.items()}
     averages = _average_payload(pms)
     target, target_found = _find_target(pms, target_name)
 
@@ -512,6 +522,9 @@ def build_report(
     warnings = list(getattr(demo, "side_warnings", []) or []) + list(
         getattr(demo, "consistency_warnings", []) or []
     )
+    if swing_meta.get('warning'):
+        warnings.append(swing_meta['warning'])
+    warnings = [w.replace("Swing 使用计分板每回合 K/A/D 近似；", "Swing 新口径见 WPA 警告；") for w in warnings]
     fixture_meta = validation or {}
     precision = fixture_meta.get("fixture_precision") or {}
     try:
@@ -572,6 +585,7 @@ def build_report(
             "scoreboard": scoreboard,
             "matrix_available": matrix_available,
             "warnings": warnings,
+            "swing": swing_meta,
             "data_quality": getattr(demo, "data_quality", {}) or {},
             "from_cache": bool(getattr(demo, "from_cache", False)),
         },
