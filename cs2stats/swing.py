@@ -60,16 +60,31 @@ def round_wpa(roster, kills, bombs, live_tick, tickrate, econ_t, econ_ct):
     return dict(result)
 
 
+def scoreboard_estimate(demo, reason):
+    values = {}
+    for player in demo.players:
+        slices = {'ALL': player.raw, **player.side}
+        values[player.steamid] = {
+            scope: (4.0 * (counter.kills - counter.deaths) + counter.assists) / counter.rounds
+            for scope, counter in slices.items() if counter.rounds > 0
+        }
+    return values, {
+        'available': bool(values), 'estimated': True,
+        'source': '计分板 Swing 估算（非 WPA / 非 HLTV）',
+        'definition': '(4 × (K − D) + A) / 回合数，单位为展示百分点；启发式估算，未经职业比赛校准。',
+        'warning': f'{reason}；改用计分板 K/D/A 估算 Swing，不代表逐事件胜率变化。',
+    }
+
+
 def analyse_match(demo):
     """Return per-player/per-side average WPA percentage points and provenance."""
-    unavailable = {'available': False, 'source': '自研启发式 WPA（非 HLTV）'}
     if not demo.data_quality.get('event_layer_reliable', False):
-        return {}, {**unavailable, 'warning': '事件归因未通过核对，Swing 隐藏；不使用计分板代理伪装 WPA。'}
+        return scoreboard_estimate(demo, '事件归因未通过核对')
     try:
         from awpy import Demo
         bombs = Demo(str(demo.path)).bomb.to_dicts()
     except Exception as exc:
-        return {}, {**unavailable, 'warning': f'bomb 事件读取失败，Swing 隐藏：{exc}'}
+        return scoreboard_estimate(demo, f'bomb 事件读取失败：{exc}')
     sums = defaultdict(lambda: defaultdict(float))
     counts = defaultdict(lambda: defaultdict(int))
     try:
@@ -93,7 +108,7 @@ def analyse_match(demo):
                     sums[sid][scope] += values.get(sid, 0)
                     counts[sid][scope] += 1
     except (ValueError, KeyError, TypeError) as exc:
-        return {}, {**unavailable, 'warning': f'WPA 输入不完整，Swing 隐藏：{exc}'}
+        return scoreboard_estimate(demo, f'WPA 输入不完整：{exc}')
     values = {sid: {scope: 100 * value / counts[sid][scope] for scope, value in scopes.items()}
               for sid, scopes in sums.items()}
     return values, {'available': True, 'source': '自研启发式 WPA（经济/人数/下包/时间；非 HLTV）',

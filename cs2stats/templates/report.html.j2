@@ -161,13 +161,13 @@
   }
   .stats-table td.player { text-align: left; min-width: 230px; }
   .match-table-wrap { border: 0; overflow-x: auto; }
-  .match-table { width: 100%; max-width: 1120px; min-width: 860px; margin: 0 auto; table-layout: fixed; }
+  .match-table { width: 100%; max-width: none; min-width: 860px; margin: 0 auto; table-layout: fixed; }
   .match-table th, .match-table td { border-bottom: 0; }
   .match-table th { background: #222b35; padding: 12px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,.09); }
   .match-table th:not(:first-child), .match-table td:not(:first-child) { border-left: 1px solid rgba(255,255,255,.06); }
-  .match-table td { font-size: 16px; padding: 12px 12px; color: #e6eef6; }
+  .match-table td { font-size: 18px; padding: 12px 12px; color: #e6eef6; }
   .match-table th:first-child, .match-table td.player { width: 34%; text-align: left; }
-  .match-table th:not(:first-child) { text-align: right; }
+  .match-table th:not(:first-child), .match-table td:not(:first-child), .breakdown-table th:not(:first-child), .breakdown-table td:not(:first-child) { text-align: center; }
   .match-table tbody tr.player-row td { border-bottom: 1px solid rgba(255,255,255,.035); }
   .match-table tbody tr.player-row.team-a { background: linear-gradient(90deg, rgba(152,255,255,.075), rgba(152,255,255,.018) 58%, transparent); }
   .match-table tbody tr.player-row.team-b { background: linear-gradient(90deg, rgba(255,255,0,.065), rgba(255,255,0,.014) 58%, transparent); }
@@ -178,7 +178,7 @@
   .match-table .team-chip > span:nth-child(2) { text-transform: uppercase; font-weight: 800; }
   .match-table .team-chip .team-score { font-size: 15px; font-weight: 800; color: #f4f8fb; }
   .match-table .team-divider td { height: 10px; }
-  .match-table .player-name { font-size: 16px; }
+  .match-table .player-name { font-size: 18px; }
   .stats-table tbody tr:nth-child(even) { background: rgba(255,255,255,.014); }
   .stats-table tbody tr:hover { background: rgba(152,255,255,.055); }
   .stats-table tbody tr.is-target { background: rgba(255,210,74,.075); }
@@ -291,14 +291,14 @@
   .dna-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 18px; align-items: stretch; }
   .dna-sub { background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
   .sub-card-title { margin: 0 0 10px; color: #f5e7bd; font-size: 14px; font-weight: 700; }
-  #style-radar { width: 100%; height: 430px; }
-  .dna-side { display: flex; flex-direction: column; gap: 18px; }
+  #style-radar { width: 100%; height: 580px; }
+  .dna-side { display: flex; flex-direction: column; justify-content: center; gap: 24px; flex: 1; padding: 20px 8px; }
   .dna-archetype { display: flex; align-items: baseline; gap: 14px; }
   .dna-label { color: var(--faint); font-size: 13px; letter-spacing: .12em; font-weight: 700; }
-  .dna-type { font-size: 32px; font-weight: 800; color: #ffd24a; text-shadow: 0 0 18px rgba(255,210,74,.35); }
+  .dna-type { font-size: 28px; font-weight: 750; color: #ffd24a; }
   .dna-summary { color: var(--text); font-size: 17px; margin: 0; }
   .dna-matches { display: flex; flex-direction: column; gap: 14px; }
-  .dna-match { display: grid; grid-template-columns: 150px 1fr 74px; align-items: center; gap: 14px; font-size: 17px; }
+  .dna-match { display: grid; grid-template-columns: 170px minmax(0, 1fr) 74px; align-items: center; gap: 14px; font-size: 17px; }
   .dna-name { font-weight: 700; }
   .dna-bar { height: 18px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08); border-radius: 9px; overflow: hidden; }
   .dna-bar span { display: block; height: 100%; background: linear-gradient(90deg, #cc7a00, #ffd24a); border-radius: 9px; box-shadow: 0 0 14px rgba(255,210,74,.55); }
@@ -445,77 +445,6 @@
     </div>
   </header>
 
-  {% if report.validation.status == 'verified' %}
-  <div class="banner banner-ok">
-    <div>
-      <strong>✓ {{ report.validation.title or '精确字段已校验' }}</strong>
-      {{ report.validation.message }}
-      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
-      {% if report.validation.checks %}
-      <details>
-        <summary>查看校验明细（{{ report.validation.checks|length }} 项）</summary>
-        <div>
-          {% for check in report.validation.checks %}
-            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
-          {% endfor %}
-        </div>
-      </details>
-      {% endif %}
-    </div>
-  </div>
-  {% elif report.validation.status == 'live' %}
-  <div class="banner banner-live">
-    <div>
-      <strong>◉ {{ report.validation.title or 'GSI 实时数据' }}</strong>
-      {{ report.validation.message }}
-      {% if report.validation.incomplete %}
-      <div>缺口：{{ report.validation.incomplete|join('；') }}</div>
-      {% endif %}
-    </div>
-  </div>
-  {% elif report.validation.status == 'partial' %}
-  <div class="banner banner-warn">
-    <div>
-      <strong>⚠ {{ report.validation.title or '部分字段已校验' }}</strong>
-      {{ report.validation.message }}
-      {% if report.validation.checks %}
-      <details>
-        <summary>查看校验明细</summary>
-        <div>
-          {% for check in report.validation.checks %}
-            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
-          {% endfor %}
-        </div>
-      </details>
-      {% endif %}
-    </div>
-  </div>
-  {% else %}
-  <div class="banner banner-warn">
-    <div>
-      <strong>⚠ {{ report.validation.title or '精确字段未校验' }}</strong>
-      {{ report.validation.message }}
-      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if report.meta.warnings %}
-  <div class="banner banner-warn">
-    <div>
-      <strong>⚠ 解析提示（{{ report.meta.warnings|length }} 条）</strong>
-      <details>
-        <summary>展开查看</summary>
-        <div>
-          {% for warning in report.meta.warnings %}
-            {{ warning }}<br>
-          {% endfor %}
-        </div>
-      </details>
-    </div>
-  </div>
-  {% endif %}
-
   {% set dq = report.meta.data_quality or {} %}
   {% if dq %}
   <div class="dq-line">
@@ -555,7 +484,7 @@
           <tr>
             <th>Player</th>
             <th>K-D</th>
-            <th>Swing</th>
+            <th title="{{ report.meta.swing.definition }}">Swing ≈</th>
             <th>ADR</th>
             <th title="爆头率：爆头击杀 / 总击杀（计分板属性）">HS%</th>
             <th title="KAST：击杀/助攻/存活/被补枪 的回合占比；本场为计分板推断">KAST</th>
@@ -607,7 +536,7 @@
     <p class="breakdown-note">
       <b>Rating 近似公式</b>：0.0073×KAST + 0.3591×KPR − 0.5329×DPR + 0.2372×Impact + 0.0032×ADR + 0.1587；
       Impact 含首杀/多杀加成。Rating &gt; 2.0 时，超出部分乘 0.85；原始公式值保留供核对。<br>
-      Swing：{{ report.meta.swing.source }}。个人事件胜率变化总和 / 正式回合数 × 100；未经职业比赛数据校准，不等同 HLTV Swing。
+      Swing：{{ report.meta.swing.source }}。{{ report.meta.swing.definition }}
     </p>
   </section>
 
@@ -685,11 +614,12 @@
       </div>
     </div>
     <div class="dna-grid">
-      <div class="dna-sub">
+      <div class="panel radar-panel">
         <h3 class="sub-card-title">风格雷达</h3>
         <div id="style-radar"></div>
+        <div class="radar-legend"><span><i class="legend-line gold"></i>玩家</span><span><i class="legend-line red"></i>最相似选手预设画像</span></div>
       </div>
-      <div class="dna-sub">
+      <div class="panel compare-panel">
         <h3 class="sub-card-title">相似度 · 原型与职业对标</h3>
         <div class="dna-side">
         <div class="dna-archetype">
@@ -701,11 +631,12 @@
           {% for m in report.style_dna.matches %}
           <div class="dna-match">
             <span class="dna-name">{{ m.name }}</span>
-            <div class="dna-bar"><span style="width: {{ m.similarity }}%"></span></div>
+            <div class="cmp-track" title="独立画像相似度，不是前三名占比"><div class="cmp-fill" style="width: {{ m.similarity }}%; background: #ffd24a; --glow: #ffd24a"></div></div>
             <span class="dna-pct">{{ '%.1f' | format(m.similarity) }}%</span>
           </div>
           {% endfor %}
         </div>
+        <p class="dna-summary"><b>最相似选手：{{ report.style_dna.matches[0].name if report.style_dna.matches else '样本不足' }}</b><br><span class="muted">独立画像相似度，不是概率或前三名占比；接近的结果不人为拉开。</span></p>
         <div class="dna-raw">
           {% set raw = report.style_dna.raw %}
           <span title="首杀对决尝试（首杀+首死）/ 总回合">首杀尝试率 {{ '%.0f' | format((raw.opening_rate or 0) * 100) }}%</span>
@@ -808,10 +739,83 @@
       <li><b>事件层</b>：{{ report.matrix.note or '本场事件归因无法与计分板属性核对一致，Kill Matrix 已隐藏，不显示可能错误的数据。' }}</li>
       {% endif %}
       <li><b>参考层</b>：Open Kills 由计分板 kills_total 的每回合首次增量推断，标“参考”，不参与 fixture 精确层判定。</li>
-      <li><b>近似层</b>：Rating、Swing、MVP；Rating 用公开流传的 Rating 2.0 近似公式（分项见“Rating 分解”表），Swing 使用经济/人数/下包/时间的自研启发式 WPA，输入不可靠时隐藏并明确警告；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
+      <li><b>近似层</b>：Rating、Swing、MVP；Rating 用公开流传的 Rating 2.0 近似公式（分项见“Rating 分解”表），Swing 优先使用启发式 WPA，输入不可靠时使用明确标注的计分板估算；当前来源：{{ report.meta.swing.source }}；MVP 基于本报告近似 Rating，不是 HLTV 官方数值。</li>
       <li><b>All / T / CT</b>：All = T + CT；T/CT 分面来自计分板每回合差值。</li>
     </ul>
   </div>
+  <section id="data-audit"><h2>数据校验与解析提示</h2>
+  {% if report.validation.status == 'verified' %}
+  <div class="banner banner-ok">
+    <div>
+      <strong>✓ {{ report.validation.title or '精确字段已校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
+      {% if report.validation.checks %}
+      <details>
+        <summary>查看校验明细（{{ report.validation.checks|length }} 项）</summary>
+        <div>
+          {% for check in report.validation.checks %}
+            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+  {% elif report.validation.status == 'live' %}
+  <div class="banner banner-live">
+    <div>
+      <strong>◉ {{ report.validation.title or 'GSI 实时数据' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.incomplete %}
+      <div>缺口：{{ report.validation.incomplete|join('；') }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% elif report.validation.status == 'partial' %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ {{ report.validation.title or '部分字段已校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.checks %}
+      <details>
+        <summary>查看校验明细</summary>
+        <div>
+          {% for check in report.validation.checks %}
+            {{ check.player }} · {{ check.field }}: 计分板 {{ check.expected }} / 解析 {{ check.actual }}<br>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ {{ report.validation.title or '精确字段未校验' }}</strong>
+      {{ report.validation.message }}
+      {% if report.validation.fixture %}<div>fixture: <code>{{ report.validation.fixture }}</code></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if report.meta.warnings %}
+  <div class="banner banner-warn">
+    <div>
+      <strong>⚠ 解析提示（{{ report.meta.warnings|length }} 条）</strong>
+      <details>
+        <summary>展开查看</summary>
+        <div>
+          {% for warning in report.meta.warnings %}
+            {{ warning }}<br>
+          {% endfor %}
+        </div>
+      </details>
+    </div>
+  </div>
+  {% endif %}
+
+  </section>
   <footer>
     <div>
       <strong>{% if report.meta.mode == 'live' %}来源：{% else %}Demo：{% endif %}</strong><code>{{ report.meta.demo_file }}</code>
@@ -940,7 +944,7 @@
             '<span class="player-name">' + esc(player.name) + '</span>' +
             (target ? '<span class="target-star">★</span>' : '') +
           '</div></td>' +
-          statCell(m.available ? m.kills + " : " + m.deaths : blank) +
+          statCell(m.available ? m.kills + "-" + m.deaths : blank) +
           statCell(!DATA.meta.swing.available ? blank : cellf('swing', '<span class="num ' + swingClass(m.swing_pct) + '">' + signed(m.swing_pct, 2) + '%</span>')) +
           statCell(cellf('adr', adrFixed(m.adr))) +
           statCell(cellf('headshot_kills', pct(m.hs_pct, 1))) +
@@ -1431,7 +1435,7 @@
       return;
     }
     if (!styleRadar) styleRadar = echarts.init(host);
-    const indicator = usableIdx.map((pair) => ({ name: pair[0].label, max: 1 }));
+    const indicator = usableIdx.map((pair) => ({ name: pair[0].label + " " + Math.round(pair[0].value * 100), max: 1 }));
     const playerValues = usableIdx.map((pair) => pair[0].value);
     const topMatch = dna.matches && dna.matches.length ? dna.matches[0].name : null;
     const proValues = topMatch && dna.profiles && dna.profiles[topMatch]
@@ -1442,15 +1446,15 @@
       seriesData.push({
         value: proValues,
         name: topMatch,
-        lineStyle: { color: "#6cb2ff", width: 1.5, type: "dashed" },
-        itemStyle: { color: "#6cb2ff" },
+        lineStyle: { color: "#ff4d4d", width: 1.5, type: "dashed" },
+        itemStyle: { color: "#ff4d4d" },
         areaStyle: { opacity: 0 }
       });
     }
     seriesData.push({
       value: playerValues,
       name: dna.name || "你",
-      lineStyle: { color: "#ffd24a", width: 2.2, shadowColor: "rgba(255,210,74,.55)", shadowBlur: 7 },
+      lineStyle: { color: "#ffd24a", width: 2.2 },
       itemStyle: { color: "#ffd24a" },
       areaStyle: { color: "rgba(255,210,74,.17)" }
     });
@@ -1459,7 +1463,7 @@
       animationDuration: 350,
       tooltip: { trigger: "item", backgroundColor: "rgba(20,24,28,.95)", borderColor: "rgba(255,210,74,.45)", textStyle: { color: "#f3e7c9", fontSize: 11 } },
       radar: {
-        center: ["50%", "52%"], radius: "62%", splitNumber: 4, indicator: indicator,
+        center: ["50%", "52%"], radius: "58%", splitNumber: 3, indicator: indicator,
         axisName: { color: "#f2e2b8", fontSize: 14, fontWeight: 600 },
         splitArea: { areaStyle: { color: ["rgba(255,213,122,.025)", "rgba(255,213,122,.055)"] } },
         splitLine: { lineStyle: { color: "rgba(222,184,105,.42)" } },

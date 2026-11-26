@@ -210,7 +210,7 @@ def compute_features(parsed: Any, steamid: int) -> dict[str, Any]:
 
 
 def match_profiles(axes: dict[str, float | None]) -> list[dict[str, Any]]:
-    """Top-3 pro similarity, as percentages that sum to 100."""
+    """Independent similarity: exp(-4 * root mean squared feature distance)."""
 
     usable = [key for key, _ in AXES if axes.get(key) is not None]
     if not usable:
@@ -220,12 +220,10 @@ def match_profiles(axes: dict[str, float | None]) -> list[dict[str, Any]]:
         dist = math.sqrt(sum((axes[key] - profile[key]) ** 2 for key in usable) / len(usable))
         scored.append((name, 1.0 - dist))
     scored.sort(key=lambda item: -item[1])
-    top = scored[:3]
-    floor = [max(score, 0.01) for _, score in top]
-    total = sum(floor) or 1.0
     return [
-        {"name": name, "similarity": round(100.0 * max(score, 0.01) / total, 1), "score": round(score, 3)}
-        for (name, score) in top
+        {"name": name, "similarity": round(100.0 * math.exp(-4.0 * (1.0 - score)), 1),
+         "score": round(score, 3)}
+        for name, score in scored[:3]
     ]
 
 

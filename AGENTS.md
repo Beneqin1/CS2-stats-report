@@ -41,7 +41,8 @@
 - 基线 fixture：mirage demo `auto-20261122-1713-de_mirage-Beneqin1.dem`（14 回合，sha256 d536b7b1…）对应 `fixtures/user_mirage_20261122.fixture.json`；另一个 2313 mirage demo sha 不匹配该 fixture。
 - 打包：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./build_exe.ps1`（默认 onedir 平铺：zip 首层即 CS2Stats.exe；产物 `package\CS2Stats-x.y.z-onedir\` + `dist\*.zip`）。zip 在冒烟前打包；冒烟后清理包内运行产物（output/、settings.json、stats.cfg、cache/）。
 - 报告雷达图固定刻度（v1.5.0）：`RADAR_PRO_AVG` 是预设参考，2/3 半径环为参考值，外环为 1.5× 参考值；超出按真实数值线性外推，画布网格可物理缩小腾出标签空间，不能改变刻度或压平数据。旧版 v1.4.1 的外环 2× 基准已归档。Impact 参考 1.30 包含本项目首杀/多杀加成，非职业数据库测得。
-- Swing v1.5.0：独立 swing.py 用经济/人数/阵营/下包/时间进行启发式 WPA 分析，个人事件变化按回合平均输出百分点。数据不可靠时隐藏并警告，不以计分板代理冒充 WPA；不按单场数据调倍率。awpy win-prob extra 需额外依赖与联网模型，因此未启用。
+- Swing v1.5.0：独立 swing.py 用经济/人数/阵营/下包/时间进行启发式 WPA 分析，个人事件变化按回合平均输出百分点。v1.5.1 起用户允许估算：数据不可靠时改用 `(4×(K−D)+A)/回合数`，明确标“计分板 Swing 估算，非 WPA/非 HLTV”，显示原因；不能冒充逐事件 WPA。awpy win-prob extra 需额外依赖与联网模型，因此未启用。
+- Style DNA 相似度（v1.5.1）：旧版前三名强制合计 100% 会让分数接近 33%；现采用独立 `100×exp(-4×RMSE)`，明确最相似选手，参考库仍为预设画像，禁止伪造更大的名次差距。
 - 删除旧算法常量前检查导入依赖：scoreboard.py 仍使用 SWING_CALIBRATION；缺失会使计分板层未加载。强制无缓存并跑 fixture 可发现该问题（v1.5.0 已恢复）。
 - 版本发布固定动作：`config.py APP_VERSION` + `build_exe.ps1` 内版本号 + README/README.txt/CHANGELOG + `docs/releases/vX.Y.Z.md`。
 - git 状态（2026-11-24）：本地 main 在 df6a151（v1.3.0）及其后改动，远端在 928c8f3；tag v1.3.0 仅本地。push 时连同新 commit 与 tag 一起。
