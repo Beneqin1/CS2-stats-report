@@ -16,6 +16,7 @@
 ## [踩坑] 现象 → 根因 → 修法
 
 - 实时监听一进图就报"dem 无法解析" → 监听到 .dem 创建就立刻解析，此时头部不完整的竞态 → 等文件大小稳定（两次采样不变）或录制结束再解析；不完整错误重试，单文件失败不退出监听。（v1.2.0）
+- 监听竞态复发/判据太弱（v1.2.0 的"3 秒不变即就绪"会被 CS2 分块写入的数秒停笔间隙误判）→ v1.4.2 升级为三重判据：≥256KB + 连续 3 次采样（间隔 ≥3s）不变 + 出现更新 .dem 的辅助信号；解析失败按错误文本分类：`outside command stream`/`unexpected EOF`/`failed to fill`=还在录（指数退避 5→15→30s，最多 5 次），`magic bytes mismatch`/`snappy corrupt input`/未知=真损坏直接报错不重试；全部分类与采样值写日志。
 - 机器人居多的 cbble demo 只显示 1 回合 → 文件本身只录了约 108 秒（1 完整回合+第 2 回合 4 秒），非解析 bug → 截断检测 + 报告"录制不完整"警告；回合切分不能只信 round 事件，非现役地图缺坐标数据时优雅降级、回合数不能错。（v1.3.1）
 - "高级 / GOTV 配置"按钮无响应 → UI 事件绑定问题（v1.2.0 已修）。
 - 注入 cfg 文件名混用 `stat_cs2stats.cfg` / `stats.cfg` → 统一为 `stats.cfg`，打包脚本清理旧名残留。（v1.2.0）
@@ -36,6 +37,7 @@
 - 非现役地图（cbble 等）无坐标数据：位置类功能降级并在报告标注"该地图无坐标数据"。
 - `paths.py app_home()`：frozen 时若 exe 目录名不是 "cs2stats" 则返回 exe 目录本身 → 平铺 zip 解压后 output / stats.cfg / settings.json 自然落在 exe 同级，无需改 paths.py。
 - `validation.py find_fixture()` 会搜索 exe 同级 `fixtures\` → 打包时 fixture 放包根 `fixtures\` 即可被 exe 自动发现。
+- demoparser2 错误文本形态（实测）：截断文件报 `parse error: file-info header offset N outside command stream 16..M`（CS2 demo 尾部有 file-info 偏移表，截断即越界）；垃圾文件报 `invalid demo file: magic bytes mismatch (expected PBDEMS2\0)`；中段损坏报 `decompression error: snappy: corrupt input`。监听层的"可重试 vs 硬错误"分类就建立在这三类文本上（demo_watch.py `_TRANSIENT_HINTS`）。
 - 基线 fixture：mirage demo `auto-20261122-1713-de_mirage-Beneqin1.dem`（14 回合，sha256 d536b7b1…）对应 `fixtures/user_mirage_20261122.fixture.json`；另一个 2313 mirage demo sha 不匹配该 fixture。
 - 打包：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./build_exe.ps1`（默认 onedir 平铺：zip 首层即 CS2Stats.exe；产物 `package\CS2Stats-x.y.z-onedir\` + `dist\*.zip`）。zip 在冒烟前打包；冒烟后清理包内运行产物（output/、settings.json、stats.cfg、cache/）。
 - 报告雷达图固定刻度：`RADAR_PRO_AVG`（config.py）= 中环职业均值基准，外环 = 2× 基准固定不随数据自适应；爆表 = value>max 时 ECharts 线性外推绘制（不压平），峰值 >1.7× 时网格物理收缩（半径 78/峰值 %）；大数字标注走 HTML 覆盖层（`.burst-layer`），全场平均不参与爆表。Impact 基准 1.30 是按本项目公式（含首杀/多杀加成，比 HLTV 高约 0.2）校准的，勿照抄 HLTV 1.1。（v1.4.1）
